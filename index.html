@@ -680,18 +680,45 @@
                 // Simulate file reading and processing
                 await new Promise(resolve => setTimeout(resolve, 1500));
                 
-                // For demo purposes, generate sample data matching R code
-                // Generate dates from Jan 2003 to Jun 2025 (stops at June to make Q2 2025 the last quarter)
-                const numColumnas = 270; // Adjusted to end at June 2025
-                const fechas = generarFechas(numColumnas);
+                // Generate dates from Jan 2003 to Jun 2025 (22.5 years = 270 months)
+                const fechas = [];
+                let year = 2003;
+                let month = 1;
+                
+                // Generate exactly 270 months to reach June 2025
+                for (let i = 0; i < 270; i++) {
+                    let day;
+                    if (month === 2) {
+                        day = ((year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0)) ? 29 : 28;
+                    } else if ([4, 6, 9, 11].includes(month)) {
+                        day = 30;
+                    } else {
+                        day = 31;
+                    }
+                    
+                    const fechaStr = `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
+                    fechas.push(fechaStr);
+                    
+                    month++;
+                    if (month > 12) {
+                        month = 1;
+                        year++;
+                    }
+                }
+                
+                console.log('Primera fecha:', fechas[0]);
+                console.log('Última fecha:', fechas[fechas.length - 1]);
+                console.log('Total fechas:', fechas.length);
                 
                 fechasDisponibles = fechas;
                 fechasTrimestrales = generarFechasTrimestrales(fechas);
                 
+                console.log('Fechas trimestrales:', fechasTrimestrales.fechas.slice(-5)); // Últimas 5 fechas trimestrales
+                
                 // Update UI
                 updateEstadoCarga(true);
                 updateFechaSelector();
-                updateDatasetInfo(numColumnas);
+                updateDatasetInfo(fechas.length);
                 
                 // Enable controls
                 document.getElementById('fecha_seleccionada').disabled = false;
@@ -755,6 +782,7 @@
                 <p><strong>Columnas:</strong> ${numColumnas + 4}</p>
                 <p><strong>Períodos disponibles:</strong> ${fechasDisponibles.length}</p>
                 <p><strong>Período:</strong> ${fechasDisponibles[0]} - ${fechasDisponibles[fechasDisponibles.length - 1]}</p>
+                <p><strong>Años de datos:</strong> 2003 - 2025</p>
             `;
             
             // Generate preview table
