@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Indicadores de Cartera de Crédito - BDE</title>
+    
+    <!-- Cargar XLSX PRIMERO antes que todo -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
     <style>
         * {
             margin: 0;
@@ -966,7 +970,7 @@
             };
         }
 
-        // Función para leer y procesar archivo Excel real
+        // Función para leer y procesar archivo Excel real (AUTO-DETECCIÓN)
         async function cargarArchivo(file) {
             try {
                 showLoading(true);
@@ -979,71 +983,91 @@
                 const sheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[sheetName];
                 
-                console.log('=== ANÁLISIS DEL ARCHIVO EXCEL ===');
-                console.log('Rango detectado:', worksheet['!ref']);
+                console.log('=== ANÁLISIS AUTOMÁTICO DEL ARCHIVO ===');
+                console.log('Rango completo detectado:', worksheet['!ref']);
                 
-                // Convertir todo a JSON para determinar el rango real
+                // PASO 1: Leer desde A5 hasta el final automáticamente (como en tu R)
+                // Equivalente a: datos_raw <- setDT(read_excel(archivo_path, range = "A5:..."))
                 const fullData = XLSX.utils.sheet_to_json(worksheet, { 
                     header: 1,
                     defval: null,
                     range: 4 // Empezar desde fila 5 (índice 4)
                 });
                 
-                console.log('Filas totales desde A5:', fullData.length);
-                console.log('Columnas en primera fila:', fullData[0] ? fullData[0].length : 0);
-                
                 if (!fullData[0] || fullData[0].length < 5) {
-                    throw new Error('El archivo no tiene el formato esperado');
+                    throw new Error('El archivo no tiene el formato esperado (mínimo 5 columnas)');
                 }
                 
-                // Determinar columnas de fechas automáticamente
-                // En tu R: numeric_columns <- current_names[3:(length(current_names)-2)]
-                const firstRow = fullData[0];
-                const totalColumns = firstRow.length;
-                const numericStartIndex = 2; // Columna 3 (índice 2)
-                const numericEndIndex = totalColumns - 2; // Hasta length-2
+                // PASO 2: Obtener nombres de columnas (como current_names en R)
+                const current_names = fullData[0];
+                console.log('Total columnas detectadas automáticamente:', current_names.length);
                 
-                console.log('Total columnas detectadas:', totalColumns);
-                console.log('Columnas de fechas: desde', numericStartIndex + 1, 'hasta', numericEndIndex);
-                console.log('Número de períodos:', numericEndIndex - numericStartIndex);
+                // PASO 3: Extraer columnas numéricas (como en tu R)
+                // numeric_columns <- current_names[3:(length(current_names)-2)]
+                const numeric_columns_start = 2; // Índice 2 = columna 3
+                const numeric_columns_end = current_names.length - 2; // length - 2
+                const numeric_columns_count = numeric_columns_end - numeric_columns_start;
                 
-                // Generar fechas para el número correcto de columnas
-                const numPeriodos = numericEndIndex - numericStartIndex;
-                const fechasGeneradas = generarFechas(numPeriodos);
+                console.log('=== LÓGICA DE TU CÓDIGO R ===');
+                console.log('Columnas numéricas: desde', numeric_columns_start + 1, 'hasta', numeric_columns_end);
+                console.log('Cantidad de períodos detectados:', numeric_columns_count);
                 
-                console.log('Fechas generadas:', fechasGeneradas.length);
+                if (numeric_columns_count <= 0) {
+                    throw new Error('No se detectaron columnas de fechas válidas');
+                }
+                
+                // PASO 4: Generar fechas automáticamente
+                // dates_vector <- generar_fechas(length(numeric_columns))
+                const fechasGeneradas = generarFechas(numeric_columns_count);
+                
+                console.log('=== FECHAS GENERADAS AUTOMÁTICAMENTE ===');
+                console.log('Total fechas:', fechasGeneradas.length);
                 console.log('Primera fecha:', fechasGeneradas[0]);
                 console.log('Última fecha:', fechasGeneradas[fechasGeneradas.length - 1]);
+                console.log('Años cubiertos:', 
+                    fechasGeneradas[0].split('/')[2], 
+                    'al', 
+                    fechasGeneradas[fechasGeneradas.length - 1].split('/')[2]
+                );
                 
-                // Crear estructura de datos
-                const headers = ['CODIGO', 'CUENTA', ...fechasGeneradas, 'VAR_ABSOLUTA', 'VAR_RELATIVA'];
+                // PASO 5: Crear nombres de columnas finales
+                // all_new_names <- c("CÓDIGO", "CUENTA", dates_vector, "VAR ABSOLUTA", "VAR RELATIVA")
+                const all_new_names = ['CODIGO', 'CUENTA', ...fechasGeneradas, 'VAR_ABSOLUTA', 'VAR_RELATIVA'];
                 
                 // Verificar que coincida el número de columnas
-                if (headers.length !== totalColumns) {
-                    console.warn('Ajustando número de headers:', headers.length, 'vs columnas:', totalColumns);
-                    // Ajustar si es necesario
-                    while (headers.length < totalColumns) {
-                        headers.splice(-2, 0, `EXTRA_${headers.length - 2}`);
-                    }
-                    while (headers.length > totalColumns) {
-                        headers.splice(-3, 1);
+                if (all_new_names.length !== current_names.length) {
+                    console.warn('⚠️ Discrepancia en número de columnas:');
+                    console.warn('Esperadas:', all_new_names.length);
+                    console.warn('Detectadas:', current_names.length);
+                    
+                    // Ajustar automáticamente
+                    if (all_new_names.length < current_names.length) {
+                        // Agregar columnas extra si es necesario
+                        const extras_needed = current_names.length - all_new_names.length;
+                        for (let i = 0; i < extras_needed; i++) {
+                            all_new_names.splice(-2, 0, `EXTRA_COL_${i + 1}`);
+                        }
                     }
                 }
                 
-                // Convertir datos a formato trabajable
+                console.log('Estructura final de columnas:', all_new_names.length, 'columnas');
+                
+                // PASO 6: Convertir datos (equivalente a setnames en R)
                 const datosEstructurados = fullData.slice(1).map((row, index) => {
                     const objeto = {};
-                    headers.forEach((header, columnIndex) => {
+                    all_new_names.forEach((header, columnIndex) => {
                         if (header === 'CODIGO') {
                             objeto[header] = parseInt(row[columnIndex]) || 0;
                         } else if (header === 'CUENTA') {
                             objeto[header] = row[columnIndex] || '';
-                        } else {
+                        } else if (header.includes('/')) { // Es una fecha
+                            objeto[header] = parseFloat(row[columnIndex]) || 0;
+                        } else { // VAR_ABSOLUTA, VAR_RELATIVA, etc.
                             objeto[header] = parseFloat(row[columnIndex]) || 0;
                         }
                     });
                     return objeto;
-                }).filter(row => row.CODIGO > 0); // Filtrar filas válidas
+                }).filter(row => row.CODIGO > 0 && row.CUENTA); // Filtrar filas válidas
                 
                 // Guardar datos procesados
                 datosOriginales = datosEstructurados;
@@ -1051,14 +1075,26 @@
                 fechasTrimestrales = generarFechasTrimestrales(fechasGeneradas);
                 
                 console.log('=== RESULTADO FINAL ===');
-                console.log('Filas de datos válidas:', datosEstructurados.length);
-                console.log('Fechas disponibles:', fechasGeneradas.length);
-                console.log('Período completo:', fechasGeneradas[0], 'al', fechasGeneradas[fechasGeneradas.length - 1]);
-                console.log('Fechas trimestrales detectadas:', fechasTrimestrales.fechas.length);
+                console.log('✅ Filas de datos válidas:', datosEstructurados.length);
+                console.log('✅ Períodos disponibles:', fechasGeneradas.length);
+                console.log('✅ Período:', fechasGeneradas[0], 'al', fechasGeneradas[fechasGeneradas.length - 1]);
+                console.log('✅ Fechas trimestrales:', fechasTrimestrales.fechas.length);
                 
                 if (fechasTrimestrales.fechas.length > 0) {
-                    console.log('Últimas fechas trimestrales:', fechasTrimestrales.fechas.slice(-4));
+                    console.log('✅ Últimas fechas trimestrales:', fechasTrimestrales.fechas.slice(-3));
                 }
+                
+                // Verificar algunos códigos clave para asegurar que los datos son correctos
+                const codigosPrueba = [1401, 1425, 1474, 149905];
+                console.log('=== VERIFICACIÓN DE CÓDIGOS CLAVE ===');
+                codigosPrueba.forEach(codigo => {
+                    const encontrado = datosEstructurados.find(row => row.CODIGO === codigo);
+                    if (encontrado) {
+                        console.log(`✅ Código ${codigo} encontrado:`, encontrado.CUENTA);
+                    } else {
+                        console.warn(`⚠️ Código ${codigo} NO encontrado`);
+                    }
+                });
                 
                 // Actualizar UI
                 updateEstadoCarga(true);
@@ -1069,11 +1105,11 @@
                 document.getElementById('fecha_seleccionada').disabled = false;
                 document.getElementById('procesar_datos').disabled = false;
                 
-                showNotification('✅ Archivo Excel cargado y procesado exitosamente', 'success');
+                showNotification(`✅ Archivo procesado: ${fechasGeneradas.length} períodos detectados automáticamente`, 'success');
                 
             } catch (error) {
                 console.error('Error detallado:', error);
-                showNotification('❌ Error al procesar archivo Excel: ' + error.message, 'error');
+                showNotification('❌ Error al procesar archivo: ' + error.message, 'error');
             } finally {
                 showLoading(false);
             }
