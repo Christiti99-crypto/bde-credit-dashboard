@@ -979,54 +979,86 @@
                 const sheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[sheetName];
                 
-                // Convertir a JSON con la estructura correcta
-                // Rango A5:JN1396 como en tu código R
-                const range = { s: { c: 0, r: 4 }, e: { c: 267, r: 1395 } }; // A5 to JN1396
-                const rawData = XLSX.utils.sheet_to_json(worksheet, { 
-                    range: range,
+                console.log('=== ANÁLISIS DEL ARCHIVO EXCEL ===');
+                console.log('Rango detectado:', worksheet['!ref']);
+                
+                // Convertir todo a JSON para determinar el rango real
+                const fullData = XLSX.utils.sheet_to_json(worksheet, { 
                     header: 1,
-                    defval: 0
+                    defval: null,
+                    range: 4 // Empezar desde fila 5 (índice 4)
                 });
                 
-                // Procesar datos como en tu R
-                // current_names <- names(datos_raw)
-                // numeric_columns <- current_names[3:(length(current_names)-2)]
+                console.log('Filas totales desde A5:', fullData.length);
+                console.log('Columnas en primera fila:', fullData[0] ? fullData[0].length : 0);
                 
-                const firstRow = rawData[0];
-                const numericColumns = firstRow.slice(2, firstRow.length - 2); // Columnas 3 a (length-2)
+                if (!fullData[0] || fullData[0].length < 5) {
+                    throw new Error('El archivo no tiene el formato esperado');
+                }
                 
-                // Generar fechas como en tu función R
-                const fechasGeneradas = generarFechas(numericColumns.length);
+                // Determinar columnas de fechas automáticamente
+                // En tu R: numeric_columns <- current_names[3:(length(current_names)-2)]
+                const firstRow = fullData[0];
+                const totalColumns = firstRow.length;
+                const numericStartIndex = 2; // Columna 3 (índice 2)
+                const numericEndIndex = totalColumns - 2; // Hasta length-2
+                
+                console.log('Total columnas detectadas:', totalColumns);
+                console.log('Columnas de fechas: desde', numericStartIndex + 1, 'hasta', numericEndIndex);
+                console.log('Número de períodos:', numericEndIndex - numericStartIndex);
+                
+                // Generar fechas para el número correcto de columnas
+                const numPeriodos = numericEndIndex - numericStartIndex;
+                const fechasGeneradas = generarFechas(numPeriodos);
+                
+                console.log('Fechas generadas:', fechasGeneradas.length);
+                console.log('Primera fecha:', fechasGeneradas[0]);
+                console.log('Última fecha:', fechasGeneradas[fechasGeneradas.length - 1]);
                 
                 // Crear estructura de datos
                 const headers = ['CODIGO', 'CUENTA', ...fechasGeneradas, 'VAR_ABSOLUTA', 'VAR_RELATIVA'];
                 
+                // Verificar que coincida el número de columnas
+                if (headers.length !== totalColumns) {
+                    console.warn('Ajustando número de headers:', headers.length, 'vs columnas:', totalColumns);
+                    // Ajustar si es necesario
+                    while (headers.length < totalColumns) {
+                        headers.splice(-2, 0, `EXTRA_${headers.length - 2}`);
+                    }
+                    while (headers.length > totalColumns) {
+                        headers.splice(-3, 1);
+                    }
+                }
+                
                 // Convertir datos a formato trabajable
-                const datosEstructurados = rawData.slice(1).map(row => {
+                const datosEstructurados = fullData.slice(1).map((row, index) => {
                     const objeto = {};
-                    headers.forEach((header, index) => {
+                    headers.forEach((header, columnIndex) => {
                         if (header === 'CODIGO') {
-                            objeto[header] = parseInt(row[index]) || 0;
+                            objeto[header] = parseInt(row[columnIndex]) || 0;
                         } else if (header === 'CUENTA') {
-                            objeto[header] = row[index] || '';
+                            objeto[header] = row[columnIndex] || '';
                         } else {
-                            objeto[header] = parseFloat(row[index]) || 0;
+                            objeto[header] = parseFloat(row[columnIndex]) || 0;
                         }
                     });
                     return objeto;
-                });
+                }).filter(row => row.CODIGO > 0); // Filtrar filas válidas
                 
                 // Guardar datos procesados
                 datosOriginales = datosEstructurados;
                 fechasDisponibles = fechasGeneradas;
                 fechasTrimestrales = generarFechasTrimestrales(fechasGeneradas);
                 
-                console.log('=== ARCHIVO CARGADO EXITOSAMENTE ===');
-                console.log('Filas de datos:', datosEstructurados.length);
+                console.log('=== RESULTADO FINAL ===');
+                console.log('Filas de datos válidas:', datosEstructurados.length);
                 console.log('Fechas disponibles:', fechasGeneradas.length);
-                console.log('Primera fecha:', fechasGeneradas[0]);
-                console.log('Última fecha:', fechasGeneradas[fechasGeneradas.length - 1]);
-                console.log('Fechas trimestrales:', fechasTrimestrales.fechas.length);
+                console.log('Período completo:', fechasGeneradas[0], 'al', fechasGeneradas[fechasGeneradas.length - 1]);
+                console.log('Fechas trimestrales detectadas:', fechasTrimestrales.fechas.length);
+                
+                if (fechasTrimestrales.fechas.length > 0) {
+                    console.log('Últimas fechas trimestrales:', fechasTrimestrales.fechas.slice(-4));
+                }
                 
                 // Actualizar UI
                 updateEstadoCarga(true);
