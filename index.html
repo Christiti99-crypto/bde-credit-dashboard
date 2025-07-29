@@ -649,6 +649,7 @@
                     year++;
                 }
             }
+            
             return fechas;
         }
 
@@ -660,7 +661,8 @@
             fechasMensuales.forEach(fecha => {
                 const [dia, mes, año] = fecha.split('/').map(Number);
                 
-                if ([3, 6, 9, 12].includes(mes)) {
+                // Q1: Marzo (31/03), Q2: Junio (30/06), Q3: Septiembre (30/09), Q4: Diciembre (31/12)
+                if (mes === 3 || mes === 6 || mes === 9 || mes === 12) {
                     const trimestre = mes === 3 ? 'Q1' : mes === 6 ? 'Q2' : mes === 9 ? 'Q3' : 'Q4';
                     fechasTrimestrales.push(fecha);
                     etiquetas.push(`${trimestre} ${año} (${fecha})`);
@@ -679,9 +681,8 @@
                 await new Promise(resolve => setTimeout(resolve, 1500));
                 
                 // For demo purposes, generate sample data matching R code
-                // R code processes range A5:JN1396, where columns 3 to (length-2) are dates
-                // This suggests approximately 267 date columns (from 2003 to 2025)
-                const numColumnas = 267; // ~22 years of monthly data (2003-2025)
+                // Generate dates from Jan 2003 to Jun 2025 (stops at June to make Q2 2025 the last quarter)
+                const numColumnas = 270; // Adjusted to end at June 2025
                 const fechas = generarFechas(numColumnas);
                 
                 fechasDisponibles = fechas;
