@@ -1373,38 +1373,221 @@
             `).join('');
         }
 
-        // Export to Excel function
+        // Export to Excel function - MEJORADA
         function exportarExcel() {
             if (!analisisCompleto) {
                 showNotification('❌ No hay datos para exportar', 'error');
                 return;
             }
             
-            const tipoTexto = analisisCompleto.tipo_analisis === 'mensual' ? 'MENSUAL' : 'TRIMESTRAL';
-            const filename = `Indicadores_2332_2333_${tipoTexto}_${analisisCompleto.fecha.replace(/\//g, '_')}.xlsx`;
-            
-            // Create CSV content from table
-            const table = document.getElementById('tabla_indicadores');
-            const rows = Array.from(table.querySelectorAll('tr'));
-            
-            let csvContent = '';
-            rows.forEach(row => {
-                const cols = Array.from(row.querySelectorAll('th, td'));
-                const rowData = cols.map(col => `"${col.textContent.trim()}"`);
-                csvContent += rowData.join(',') + '\n';
-            });
-            
-            // Download as CSV (simulating Excel export)
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = filename.replace('.xlsx', '.csv');
-            link.style.display = 'none';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            showNotification('✅ Archivo exportado exitosamente', 'success');
+            try {
+                const tipoTexto = analisisCompleto.tipo_analisis === 'mensual' ? 'MENSUAL' : 'TRIMESTRAL';
+                const fechaSeleccionada = analisisCompleto.fecha;
+                
+                // Obtener las últimas 4 fechas según el tipo de análisis
+                let fechasParaExportar = [];
+                
+                if (analisisCompleto.tipo_analisis === 'mensual') {
+                    // Últimas 4 fechas mensuales
+                    const posicionFecha = fechasDisponibles.indexOf(fechaSeleccionada);
+                    const inicioRango = Math.max(0, posicionFecha - 3);
+                    fechasParaExportar = fechasDisponibles.slice(inicioRango, posicionFecha + 1);
+                } else {
+                    // Últimas 4 fechas trimestrales
+                    const posicionFecha = fechasTrimestrales.fechas.indexOf(fechaSeleccionada);
+                    const inicioRango = Math.max(0, posicionFecha - 3);
+                    fechasParaExportar = fechasTrimestrales.fechas.slice(inicioRango, posicionFecha + 1);
+                }
+                
+                console.log('=== EXPORTANDO DATOS ===');
+                console.log('Tipo de análisis:', tipoTexto);
+                console.log('Fecha principal:', fechaSeleccionada);
+                console.log('Fechas para exportar:', fechasParaExportar);
+                
+                // Calcular datos para cada fecha
+                const datosMultiplePeriodos = [];
+                
+                fechasParaExportar.forEach(fecha => {
+                    const productivo = procesar_cartera_productiva(datosOriginales, fecha);
+                    const inversion = procesar_cartera_inversion(datosOriginales, fecha);
+                    
+                    datosMultiplePeriodos.push({
+                        fecha,
+                        productivo,
+                        inversion
+                    });
+                });
+                
+                // Crear estructura de datos para Excel
+                const excelData = [];
+                
+                // Título principal
+                excelData.push([
+                    `INDICADORES DE CARTERA DE CRÉDITO - BDE`,
+                    '', '', '', ''
+                ]);
+                excelData.push([
+                    `2.3.3.2 COBERTURA DE PROVISIONES POR SEGMENTO - ANÁLISIS ${tipoTexto}`,
+                    '', '', '', ''
+                ]);
+                excelData.push([
+                    `2.3.3.3 CALIDAD DE CARTERA POR SEGMENTOS DE CRÉDITO - ANÁLISIS ${tipoTexto}`,
+                    '', '', '', ''
+                ]);
+                excelData.push([]); // Línea vacía
+                
+                // Headers con fechas
+                const headers = ['INDICADORES', ...fechasParaExportar];
+                excelData.push(headers);
+                
+                // Datos de cobertura (2.3.3.2)
+                excelData.push(['COBERTURA DE PROVISIONES POR SEGMENTO:', ...Array(fechasParaExportar.length).fill('')]);
+                
+                // Cartera Productivo
+                const coberturaProductivo = datosMultiplePeriodos.map(datos => {
+                    const cobertura = datos.productivo.cartera_riesgo > 0 ? 
+                        ((datos.productivo.total_provisiones + datos.productivo.provision_generica) / datos.productivo.cartera_riesgo) * 100 : 0;
+                    return `${cobertura.toFixed(2)}%`;
+                });
+                excelData.push(['CARTERA PRODUCTIVO (*)', ...coberturaProductivo]);
+                
+                // Cartera Inversión Pública
+                const coberturaInversion = datosMultiplePeriodos.map(datos => {
+                    const cobertura = datos.inversion.cartera_riesgo > 0 ? 
+                        ((datos.inversion.total_provisiones + datos.inversion.provision_generica) / datos.inversion.cartera_riesgo) * 100 : 0;
+                    return `${cobertura.toFixed(2)}%`;
+                });
+                excelData.push(['CARTERA INVERSIÓN PÚBLICA', ...coberturaInversion]);
+                
+                excelData.push([]); // Línea vacía
+                
+                // Datos detallados de Cartera Productivo
+                excelData.push(['CARTERA PRODUCTIVO - DETALLE:', ...Array(fechasParaExportar.length).fill('')]);
+                
+                const totalCreditoProductivo = datosMultiplePeriodos.map(datos => formatNumber(datos.productivo.total_credito));
+                excelData.push(['TOTAL CARTERA DE CRÉDITO PRODUCTIVO', ...totalCreditoProductivo]);
+                
+                const totalProvisionesProductivo = datosMultiplePeriodos.map(datos => formatNumber(datos.productivo.total_provisiones));
+                excelData.push(['TOTAL PROVISIONES ESPECÍFICAS', ...totalProvisionesProductivo]);
+                
+                const provisionGenericaProductivo = datosMultiplePeriodos.map(datos => formatNumber(datos.productivo.provision_generica));
+                excelData.push(['TOTAL PROVISIÓN GENÉRICA', ...provisionGenericaProductivo]);
+                
+                const carteraVencerProductivo = datosMultiplePeriodos.map(datos => formatNumber(datos.productivo.cartera_vencer));
+                excelData.push(['CARTERA POR VENCER', ...carteraVencerProductivo]);
+                
+                const carteraRiesgoProductivo = datosMultiplePeriodos.map(datos => formatNumber(datos.productivo.cartera_riesgo));
+                excelData.push(['TOTAL CARTERA EN RIESGO', ...carteraRiesgoProductivo]);
+                
+                const carteraNDIProductivo = datosMultiplePeriodos.map(datos => formatNumber(datos.productivo.cartera_ndi));
+                excelData.push(['CARTERA QUE NO DEVENGA INTERES', ...carteraNDIProductivo]);
+                
+                const carteraVencidaProductivo = datosMultiplePeriodos.map(datos => formatNumber(datos.productivo.cartera_vencida));
+                excelData.push(['CARTERA VENCIDA', ...carteraVencidaProductivo]);
+                
+                excelData.push([]); // Línea vacía
+                
+                // Datos detallados de Cartera Inversión Pública
+                excelData.push(['CARTERA INVERSIÓN PÚBLICA - DETALLE:', ...Array(fechasParaExportar.length).fill('')]);
+                
+                const totalCreditoInversion = datosMultiplePeriodos.map(datos => formatNumber(datos.inversion.total_credito));
+                excelData.push(['TOTAL CARTERA DE CRÉDITO INVERSIÓN PÚBLICA', ...totalCreditoInversion]);
+                
+                const totalProvisionesInversion = datosMultiplePeriodos.map(datos => formatNumber(datos.inversion.total_provisiones));
+                excelData.push(['TOTAL PROVISIONES ESPECÍFICAS', ...totalProvisionesInversion]);
+                
+                const provisionGenericaInversion = datosMultiplePeriodos.map(datos => formatNumber(datos.inversion.provision_generica));
+                excelData.push(['TOTAL PROVISIÓN GENÉRICA', ...provisionGenericaInversion]);
+                
+                const carteraVencerInversion = datosMultiplePeriodos.map(datos => formatNumber(datos.inversion.cartera_vencer));
+                excelData.push(['CARTERA POR VENCER', ...carteraVencerInversion]);
+                
+                const carteraRiesgoInversion = datosMultiplePeriodos.map(datos => formatNumber(datos.inversion.cartera_riesgo));
+                excelData.push(['TOTAL CARTERA EN RIESGO', ...carteraRiesgoInversion]);
+                
+                const carteraNDIInversion = datosMultiplePeriodos.map(datos => formatNumber(datos.inversion.cartera_ndi));
+                excelData.push(['CARTERA QUE NO DEVENGA INTERES', ...carteraNDIInversion]);
+                
+                const carteraVencidaInversion = datosMultiplePeriodos.map(datos => formatNumber(datos.inversion.cartera_vencida));
+                excelData.push(['CARTERA VENCIDA', ...carteraVencidaInversion]);
+                
+                excelData.push([]); // Línea vacía
+                
+                // Cobertura total
+                const coberturaTotalData = datosMultiplePeriodos.map(datos => {
+                    const cobertura = ((datos.productivo.total_provisiones + datos.productivo.provision_generica + 
+                                     datos.inversion.total_provisiones + datos.inversion.provision_generica) / 
+                                    (datos.productivo.cartera_riesgo + datos.inversion.cartera_riesgo)) * 100;
+                    return `${cobertura.toFixed(2)}%`;
+                });
+                excelData.push(['COBERTURA TOTAL CARTERA', ...coberturaTotalData]);
+                
+                excelData.push([]); // Línea vacía
+                
+                // Calidad de cartera (2.3.3.3)
+                excelData.push(['CALIDAD DE CARTERA POR SEGMENTOS:', ...Array(fechasParaExportar.length).fill('')]);
+                excelData.push(['CARTERA PRODUCTIVO:', ...Array(fechasParaExportar.length).fill('')]);
+                
+                const pctVencerProductivo = datosMultiplePeriodos.map(datos => `${((datos.productivo.cartera_vencer / datos.productivo.total_credito) * 100).toFixed(2)}%`);
+                excelData.push(['PORCENTAJE DE CARTERA POR VENCER', ...pctVencerProductivo]);
+                
+                const pctRiesgoProductivo = datosMultiplePeriodos.map(datos => `${((datos.productivo.cartera_riesgo / datos.productivo.total_credito) * 100).toFixed(2)}%`);
+                excelData.push(['PORCENTAJE DE CARTERA EN RIESGO', ...pctRiesgoProductivo]);
+                
+                const pctNDIProductivo = datosMultiplePeriodos.map(datos => `${((datos.productivo.cartera_ndi / datos.productivo.total_credito) * 100).toFixed(2)}%`);
+                excelData.push(['PORCENTAJE DE CARTERA QUE NO DEVENGA INTERES', ...pctNDIProductivo]);
+                
+                const pctVencidaProductivo = datosMultiplePeriodos.map(datos => `${((datos.productivo.cartera_vencida / datos.productivo.total_credito) * 100).toFixed(2)}%`);
+                excelData.push(['PORCENTAJE DE CARTERA VENCIDA', ...pctVencidaProductivo]);
+                
+                excelData.push(['CARTERA INVERSIÓN PÚBLICA:', ...Array(fechasParaExportar.length).fill('')]);
+                
+                const pctVencerInversion = datosMultiplePeriodos.map(datos => `${((datos.inversion.cartera_vencer / datos.inversion.total_credito) * 100).toFixed(2)}%`);
+                excelData.push(['PORCENTAJE DE CARTERA POR VENCER', ...pctVencerInversion]);
+                
+                const pctRiesgoInversion = datosMultiplePeriodos.map(datos => `${((datos.inversion.cartera_riesgo / datos.inversion.total_credito) * 100).toFixed(2)}%`);
+                excelData.push(['PORCENTAJE DE CARTERA EN RIESGO', ...pctRiesgoInversion]);
+                
+                const pctNDIInversion = datosMultiplePeriodos.map(datos => `${((datos.inversion.cartera_ndi / datos.inversion.total_credito) * 100).toFixed(2)}%`);
+                excelData.push(['PORCENTAJE DE CARTERA QUE NO DEVENGA INTERES', ...pctNDIInversion]);
+                
+                const pctVencidaInversion = datosMultiplePeriodos.map(datos => `${((datos.inversion.cartera_vencida / datos.inversion.total_credito) * 100).toFixed(2)}%`);
+                excelData.push(['PORCENTAJE DE CARTERA VENCIDA', ...pctVencidaInversion]);
+                
+                // Crear workbook de Excel
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.aoa_to_sheet(excelData);
+                
+                // Aplicar formato y estilos
+                // Anchos de columna
+                const colWidths = [{ wch: 50 }, ...fechasParaExportar.map(() => ({ wch: 15 }))];
+                ws['!cols'] = colWidths;
+                
+                // Agregar hoja al workbook
+                XLSX.utils.book_append_sheet(wb, ws, 'Indicadores BDE');
+                
+                // Generar nombre de archivo
+                const fechaArchivo = fechaSeleccionada.replace(/\//g, '_');
+                const filename = `Indicadores_BDE_${tipoTexto}_${fechaArchivo}_Ultimos4Periodos.xlsx`;
+                
+                // Descargar archivo Excel
+                XLSX.writeFile(wb, filename);
+                
+                console.log('✅ Archivo Excel generado:', filename);
+                showNotification(`✅ Archivo Excel descargado: ${filename}`, 'success');
+                
+            } catch (error) {
+                console.error('Error en exportación:', error);
+                showNotification('❌ Error al exportar a Excel: ' + error.message, 'error');
+            }
+        }
+
+        // Función auxiliar para formatear números
+        function formatNumber(num) {
+            return new Intl.NumberFormat('es-ES', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(Math.round(num));
         }
 
         // Utility functions
