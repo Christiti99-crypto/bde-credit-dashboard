@@ -827,105 +827,271 @@
             `;
         }
 
-        // Process data function with EXACT values from your application
+        // Traducción exacta de tu función R: procesar_cartera_productiva
+        function procesar_cartera_productiva(datos, fecha_col) {
+            // TOTAL CARTERA DE CREDITO PRODUCTIVO
+            const codigos_total = [1401, 1409, 1417, 1425, 1433, 1441, 1449, 1457, 1465];
+            const total_credito = datos
+                .filter(row => codigos_total.includes(row.CODIGO))
+                .reduce((sum, row) => sum + (parseFloat(row[fecha_col]) || 0), 0);
+            
+            // Total de Provisiones Específicas - traducción exacta del R
+            // res_temp <- copy(res)
+            // res_temp[CÓDIGO == 149905, (fecha_col) := get(fecha_col) * -1]
+            // total_provisiones <- res_temp[CÓDIGO %in% c(149905, 741401, 741409), sum(get(fecha_col), na.rm = TRUE)]
+            
+            let total_provisiones = 0;
+            datos.forEach(row => {
+                if (row.CODIGO === 149905) {
+                    // Multiplicar por -1 como en el código R
+                    total_provisiones += (parseFloat(row[fecha_col]) || 0) * -1;
+                } else if ([741401, 741409].includes(row.CODIGO)) {
+                    total_provisiones += (parseFloat(row[fecha_col]) || 0);
+                }
+            });
+            
+            // Total Provisión Genérica
+            // provision_generica <- res[CÓDIGO %in% c(741420, 741428, 741429), sum(get(fecha_col), na.rm = TRUE)]
+            const codigos_provision_generica = [741420, 741428, 741429];
+            const provision_generica = datos
+                .filter(row => codigos_provision_generica.includes(row.CODIGO))
+                .reduce((sum, row) => sum + (parseFloat(row[fecha_col]) || 0), 0);
+            
+            // Cartera por Vencer
+            // cartera_vencer <- res[CÓDIGO %in% c(1401, 1409, 1417, 149105, 149405), sum(get(fecha_col), na.rm = TRUE)]
+            const codigos_vencer = [1401, 1409, 1417, 149105, 149405];
+            const cartera_vencer = datos
+                .filter(row => codigos_vencer.includes(row.CODIGO))
+                .reduce((sum, row) => sum + (parseFloat(row[fecha_col]) || 0), 0);
+            
+            // Total Cartera en Riesgo
+            // cartera_riesgo <- res[CÓDIGO %in% c(1425, 1433, 1441, 1449, 1457, 1465), sum(get(fecha_col), na.rm = TRUE)]
+            const codigos_riesgo = [1425, 1433, 1441, 1449, 1457, 1465];
+            const cartera_riesgo = datos
+                .filter(row => codigos_riesgo.includes(row.CODIGO))
+                .reduce((sum, row) => sum + (parseFloat(row[fecha_col]) || 0), 0);
+            
+            // Cartera NDI
+            // cartera_ndi <- res[CÓDIGO %in% c(1425, 1433, 1441, 149205, 149505), sum(get(fecha_col), na.rm = TRUE)]
+            const codigos_ndi = [1425, 1433, 1441, 149205, 149505];
+            const cartera_ndi = datos
+                .filter(row => codigos_ndi.includes(row.CODIGO))
+                .reduce((sum, row) => sum + (parseFloat(row[fecha_col]) || 0), 0);
+            
+            // Cartera Vencida
+            // cartera_vencida <- res[CÓDIGO %in% c(1449, 1457, 1465, 149305, 149605), sum(get(fecha_col), na.rm = TRUE)]
+            const codigos_vencida = [1449, 1457, 1465, 149305, 149605];
+            const cartera_vencida = datos
+                .filter(row => codigos_vencida.includes(row.CODIGO))
+                .reduce((sum, row) => sum + (parseFloat(row[fecha_col]) || 0), 0);
+            
+            return {
+                total_credito,
+                total_provisiones,
+                provision_generica,
+                cartera_vencer,
+                cartera_riesgo,
+                cartera_ndi,
+                cartera_vencida
+            };
+        }
+
+        // Traducción exacta de tu función R: procesar_cartera_inversion
+        function procesar_cartera_inversion(datos, fecha_col) {
+            // Total Cartera Inversión Pública
+            // total_credito <- res[CÓDIGO %in% c(1474, 1476, 1478, 1480, 1482, 1484, 1486, 1488, 1490, 1491, 1492, 1493, 1494, 1495, 1496), sum(get(fecha_col), na.rm = TRUE)]
+            const codigos_total = [1474, 1476, 1478, 1480, 1482, 1484, 1486, 1488, 1490, 1491, 1492, 1493, 1494, 1495, 1496];
+            const total_credito = datos
+                .filter(row => codigos_total.includes(row.CODIGO))
+                .reduce((sum, row) => sum + (parseFloat(row[fecha_col]) || 0), 0);
+            
+            // Total Provisiones Específicas - traducción exacta del R
+            // res_temp <- copy(res)
+            // res_temp[CÓDIGO == 149960, (fecha_col) := get(fecha_col) * -1]
+            // total_provisiones <- res_temp[CÓDIGO %in% c(149960, 741433, 741437), sum(get(fecha_col), na.rm = TRUE)]
+            
+            let total_provisiones = 0;
+            datos.forEach(row => {
+                if (row.CODIGO === 149960) {
+                    // Multiplicar por -1 como en el código R
+                    total_provisiones += (parseFloat(row[fecha_col]) || 0) * -1;
+                } else if ([741433, 741437].includes(row.CODIGO)) {
+                    total_provisiones += (parseFloat(row[fecha_col]) || 0);
+                }
+            });
+            
+            // Total Provisión Genérica
+            // provision_generica <- res[CÓDIGO %in% c(741442), sum(get(fecha_col), na.rm = TRUE)]
+            const provision_generica = datos
+                .filter(row => row.CODIGO === 741442)
+                .reduce((sum, row) => sum + (parseFloat(row[fecha_col]) || 0), 0);
+            
+            // Cartera por Vencer
+            // cartera_vencer <- res[CÓDIGO %in% c(1474, 1476, 1478, 1491, 1494), sum(get(fecha_col), na.rm = TRUE)]
+            const codigos_vencer = [1474, 1476, 1478, 1491, 1494];
+            const cartera_vencer = datos
+                .filter(row => codigos_vencer.includes(row.CODIGO))
+                .reduce((sum, row) => sum + (parseFloat(row[fecha_col]) || 0), 0);
+            
+            // Total Cartera en Riesgo
+            // cartera_riesgo <- res[CÓDIGO %in% c(1480, 1482, 1484, 1486, 1488, 1490, 149245, 149345, 149545, 149645), sum(get(fecha_col), na.rm = TRUE)]
+            const codigos_riesgo = [1480, 1482, 1484, 1486, 1488, 1490, 149245, 149345, 149545, 149645];
+            const cartera_riesgo = datos
+                .filter(row => codigos_riesgo.includes(row.CODIGO))
+                .reduce((sum, row) => sum + (parseFloat(row[fecha_col]) || 0), 0);
+            
+            // Cartera NDI
+            // cartera_ndi <- res[CÓDIGO %in% c(1480, 1482, 1484, 149545, 149245), sum(get(fecha_col), na.rm = TRUE)]
+            const codigos_ndi = [1480, 1482, 1484, 149545, 149245];
+            const cartera_ndi = datos
+                .filter(row => codigos_ndi.includes(row.CODIGO))
+                .reduce((sum, row) => sum + (parseFloat(row[fecha_col]) || 0), 0);
+            
+            // Cartera Vencida
+            // cartera_vencida <- res[CÓDIGO %in% c(1486, 1488, 1490, 149345, 149645), sum(get(fecha_col), na.rm = TRUE)]
+            const codigos_vencida = [1486, 1488, 1490, 149345, 149645];
+            const cartera_vencida = datos
+                .filter(row => codigos_vencida.includes(row.CODIGO))
+                .reduce((sum, row) => sum + (parseFloat(row[fecha_col]) || 0), 0);
+            
+            return {
+                total_credito,
+                total_provisiones,
+                provision_generica,
+                cartera_vencer,
+                cartera_riesgo,
+                cartera_ndi,
+                cartera_vencida
+            };
+        }
+
+        // Función para leer y procesar archivo Excel real
+        async function cargarArchivo(file) {
+            try {
+                showLoading(true);
+                
+                // Leer archivo Excel usando SheetJS
+                const buffer = await file.arrayBuffer();
+                const workbook = XLSX.read(buffer, { type: 'array' });
+                
+                // Obtener la primera hoja
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                
+                // Convertir a JSON con la estructura correcta
+                // Rango A5:JN1396 como en tu código R
+                const range = { s: { c: 0, r: 4 }, e: { c: 267, r: 1395 } }; // A5 to JN1396
+                const rawData = XLSX.utils.sheet_to_json(worksheet, { 
+                    range: range,
+                    header: 1,
+                    defval: 0
+                });
+                
+                // Procesar datos como en tu R
+                // current_names <- names(datos_raw)
+                // numeric_columns <- current_names[3:(length(current_names)-2)]
+                
+                const firstRow = rawData[0];
+                const numericColumns = firstRow.slice(2, firstRow.length - 2); // Columnas 3 a (length-2)
+                
+                // Generar fechas como en tu función R
+                const fechasGeneradas = generarFechas(numericColumns.length);
+                
+                // Crear estructura de datos
+                const headers = ['CODIGO', 'CUENTA', ...fechasGeneradas, 'VAR_ABSOLUTA', 'VAR_RELATIVA'];
+                
+                // Convertir datos a formato trabajable
+                const datosEstructurados = rawData.slice(1).map(row => {
+                    const objeto = {};
+                    headers.forEach((header, index) => {
+                        if (header === 'CODIGO') {
+                            objeto[header] = parseInt(row[index]) || 0;
+                        } else if (header === 'CUENTA') {
+                            objeto[header] = row[index] || '';
+                        } else {
+                            objeto[header] = parseFloat(row[index]) || 0;
+                        }
+                    });
+                    return objeto;
+                });
+                
+                // Guardar datos procesados
+                datosOriginales = datosEstructurados;
+                fechasDisponibles = fechasGeneradas;
+                fechasTrimestrales = generarFechasTrimestrales(fechasGeneradas);
+                
+                console.log('=== ARCHIVO CARGADO EXITOSAMENTE ===');
+                console.log('Filas de datos:', datosEstructurados.length);
+                console.log('Fechas disponibles:', fechasGeneradas.length);
+                console.log('Primera fecha:', fechasGeneradas[0]);
+                console.log('Última fecha:', fechasGeneradas[fechasGeneradas.length - 1]);
+                console.log('Fechas trimestrales:', fechasTrimestrales.fechas.length);
+                
+                // Actualizar UI
+                updateEstadoCarga(true);
+                updateFechaSelector();
+                updateDatasetInfo(fechasGeneradas.length);
+                
+                // Habilitar controles
+                document.getElementById('fecha_seleccionada').disabled = false;
+                document.getElementById('procesar_datos').disabled = false;
+                
+                showNotification('✅ Archivo Excel cargado y procesado exitosamente', 'success');
+                
+            } catch (error) {
+                console.error('Error detallado:', error);
+                showNotification('❌ Error al procesar archivo Excel: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Process data function usando las funciones R traducidas
         async function procesarDatos() {
             try {
                 showLoading(true);
                 
+                if (!datosOriginales || !fechasDisponibles) {
+                    throw new Error('No hay datos cargados');
+                }
+                
                 const fechaSeleccionada = document.getElementById('fecha_seleccionada').value;
                 const tipoAnalisis = document.querySelector('input[name="tipo_analisis"]:checked').value;
                 
-                // Simulate data processing
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                console.log('=== PROCESANDO DATOS CON LÓGICA R TRADUCIDA ===');
+                console.log('Fecha seleccionada:', fechaSeleccionada);
+                console.log('Tipo análisis:', tipoAnalisis);
+                console.log('Total filas de datos:', datosOriginales.length);
                 
-                // EXACT VALUES from your R application output for 30/06/2025
-                // These match exactly what appears in your Shiny app
+                // Simular procesamiento
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 
-                // CARTERA PRODUCTIVA (valores exactos de tu aplicación R)
-                const productivo = {
-                    // TOTAL CARTERA DE CREDITO PRODUCTIVO
-                    total_credito: 28567890123,
-                    
-                    // TOTAL PROVISIONES ESPECÍFICAS CARTERA PRODUCTIVO
-                    total_provisiones: 8234567890,
-                    
-                    // TOTAL PROVISIÓN GENÉRICA CARTERA PRODUCTIVO
-                    provision_generica: 456789012,
-                    
-                    // CARTERA POR VENCER
-                    cartera_vencer: 25123456789,
-                    
-                    // TOTAL CARTERA EN RIESGO (denominador para cobertura)
-                    cartera_riesgo: 3444433334,
-                    
-                    // CARTERA QUE NO DEVENGA INTERES
-                    cartera_ndi: 2222222222,
-                    
-                    // CARTERA VENCIDA
-                    cartera_vencida: 1222211112
-                };
+                // Usar las funciones R traducidas
+                const productivo = procesar_cartera_productiva(datosOriginales, fechaSeleccionada);
+                const inversion = procesar_cartera_inversion(datosOriginales, fechaSeleccionada);
                 
-                // CARTERA INVERSIÓN PÚBLICA (valores exactos de tu aplicación R)
-                const inversion = {
-                    // TOTAL CARTERA DE CRÉDITO INVERSIÓN PÚBLICA
-                    total_credito: 12345678901,
-                    
-                    // TOTAL PROVISIONES ESPECÍFICAS CARTERA DE CRÉDITO INVERSIÓN PÚBLICA
-                    total_provisiones: 3456789012,
-                    
-                    // TOTAL PROVISIÓN GENÉRICA CARTERA INV. PÚBLICA
-                    provision_generica: 123456789,
-                    
-                    // CARTERA POR VENCER
-                    cartera_vencer: 10876543210,
-                    
-                    // TOTAL CARTERA EN RIESGO (denominador para cobertura)
-                    cartera_riesgo: 1469234691,
-                    
-                    // CARTERA QUE NO DEVENGA INTERES
-                    cartera_ndi: 987654321,
-                    
-                    // CARTERA VENCIDA
-                    cartera_vencida: 481580370
-                };
+                console.log('=== RESULTADOS CARTERA PRODUCTIVA ===');
+                console.log('Total Crédito:', productivo.total_credito.toLocaleString());
+                console.log('Total Provisiones:', productivo.total_provisiones.toLocaleString());
+                console.log('Provisión Genérica:', productivo.provision_generica.toLocaleString());
+                console.log('Cartera en Riesgo:', productivo.cartera_riesgo.toLocaleString());
                 
-                // Verificar cálculos exactos
-                const cobertura_productivo_calc = ((productivo.total_provisiones + productivo.provision_generica) / productivo.cartera_riesgo) * 100;
-                const cobertura_inversion_calc = ((inversion.total_provisiones + inversion.provision_generica) / inversion.cartera_riesgo) * 100;
-                const cobertura_total_calc = ((productivo.total_provisiones + productivo.provision_generica + inversion.total_provisiones + inversion.provision_generica) / (productivo.cartera_riesgo + inversion.cartera_riesgo)) * 100;
+                console.log('=== RESULTADOS CARTERA INVERSIÓN PÚBLICA ===');
+                console.log('Total Crédito:', inversion.total_credito.toLocaleString());
+                console.log('Total Provisiones:', inversion.total_provisiones.toLocaleString());
+                console.log('Provisión Genérica:', inversion.provision_generica.toLocaleString());
+                console.log('Cartera en Riesgo:', inversion.cartera_riesgo.toLocaleString());
                 
-                console.log('=== VERIFICACIÓN CON VALORES DE TU APLICACIÓN R ===');
-                console.log('CARTERA PRODUCTIVO:');
-                console.log('- Total Provisiones:', productivo.total_provisiones.toLocaleString());
-                console.log('- Provisión Genérica:', productivo.provision_generica.toLocaleString());
-                console.log('- Suma:', (productivo.total_provisiones + productivo.provision_generica).toLocaleString());
-                console.log('- Cartera en Riesgo:', productivo.cartera_riesgo.toLocaleString());
-                console.log('- Cobertura calculada:', cobertura_productivo_calc.toFixed(2) + '%');
-                console.log('');
-                console.log('CARTERA INVERSIÓN PÚBLICA:');
-                console.log('- Total Provisiones:', inversion.total_provisiones.toLocaleString());
-                console.log('- Provisión Genérica:', inversion.provision_generica.toLocaleString());
-                console.log('- Suma:', (inversion.total_provisiones + inversion.provision_generica).toLocaleString());
-                console.log('- Cartera en Riesgo:', inversion.cartera_riesgo.toLocaleString());
-                console.log('- Cobertura calculada:', cobertura_inversion_calc.toFixed(2) + '%');
-                console.log('');
-                console.log('COBERTURA TOTAL:');
-                console.log('- Cobertura Total calculada:', cobertura_total_calc.toFixed(2) + '% (objetivo: 249.74%)');
+                // Calcular coberturas usando la misma fórmula que en R
+                const cobertura_productivo = productivo.cartera_riesgo > 0 ? 
+                    ((productivo.total_provisiones + productivo.provision_generica) / productivo.cartera_riesgo) * 100 : 0;
                 
-                // Verificar porcentajes de calidad
-                console.log('');
-                console.log('=== PORCENTAJES DE CALIDAD ===');
-                console.log('CARTERA PRODUCTIVO:');
-                console.log('- % Por Vencer:', ((productivo.cartera_vencer / productivo.total_credito) * 100).toFixed(2) + '% (objetivo: 87.94%)');
-                console.log('- % En Riesgo:', ((productivo.cartera_riesgo / productivo.total_credito) * 100).toFixed(2) + '% (objetivo: 12.06%)');
-                console.log('- % NDI:', ((productivo.cartera_ndi / productivo.total_credito) * 100).toFixed(2) + '% (objetivo: 7.78%)');
-                console.log('- % Vencida:', ((productivo.cartera_vencida / productivo.total_credito) * 100).toFixed(2) + '% (objetivo: 4.28%)');
-                console.log('');
-                console.log('CARTERA INVERSIÓN PÚBLICA:');
-                console.log('- % Por Vencer:', ((inversion.cartera_vencer / inversion.total_credito) * 100).toFixed(2) + '% (objetivo: 88.10%)');
-                console.log('- % En Riesgo:', ((inversion.cartera_riesgo / inversion.total_credito) * 100).toFixed(2) + '% (objetivo: 11.90%)');
-                console.log('- % NDI:', ((inversion.cartera_ndi / inversion.total_credito) * 100).toFixed(2) + '% (objetivo: 8.00%)');
-                console.log('- % Vencida:', ((inversion.cartera_vencida / inversion.total_credito) * 100).toFixed(2) + '% (objetivo: 3.90%)');
+                const cobertura_inversion = inversion.cartera_riesgo > 0 ? 
+                    ((inversion.total_provisiones + inversion.provision_generica) / inversion.cartera_riesgo) * 100 : 0;
+                
+                console.log('=== COBERTURAS CALCULADAS ===');
+                console.log('Cobertura Productivo:', cobertura_productivo.toFixed(2) + '%');
+                console.log('Cobertura Inversión:', cobertura_inversion.toFixed(2) + '%');
                 
                 analisisCompleto = {
                     fecha: fechaSeleccionada,
@@ -935,9 +1101,10 @@
                 };
                 
                 updateIndicadores();
-                showNotification('✅ Análisis procesado con valores exactos de tu aplicación R', 'success');
+                showNotification('✅ Análisis procesado con lógica R traducida', 'success');
                 
             } catch (error) {
+                console.error('Error en procesamiento:', error);
                 showNotification('❌ Error al procesar datos: ' + error.message, 'error');
             } finally {
                 showLoading(false);
