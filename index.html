@@ -475,12 +475,12 @@
                     <div class="form-group">
                         <label>Seleccionar periodicidad:</label>
                         <div class="radio-group">
-                            <div class="radio-option selected" onclick="selectRadio('mensual')">
-                                <input type="radio" name="tipo_analisis" value="mensual" checked>
+                            <div class="radio-option" onclick="selectRadio('mensual')">
+                                <input type="radio" name="tipo_analisis" value="mensual">
                                 📅 Mensual
                             </div>
-                            <div class="radio-option" onclick="selectRadio('trimestral')">
-                                <input type="radio" name="tipo_analisis" value="trimestral">
+                            <div class="radio-option selected" onclick="selectRadio('trimestral')">
+                                <input type="radio" name="tipo_analisis" value="trimestral" checked>
                                 📈 Trimestral
                             </div>
                         </div>
@@ -766,8 +766,21 @@
                 document.getElementById('fecha_seleccionada').disabled = false;
                 document.getElementById('procesar_datos').disabled = false;
                 
-                // **PROCESAR AUTOMÁTICAMENTE CON LA ÚLTIMA FECHA DISPONIBLE**
-                document.getElementById('fecha_seleccionada').value = fechasDisponibles[fechasDisponibles.length - 1];
+                // **PROCESAR AUTOMÁTICAMENTE CON LA ÚLTIMA FECHA TRIMESTRAL DISPONIBLE**
+                // Seleccionar automáticamente el análisis trimestral y la última fecha trimestral
+                document.querySelector('input[name="tipo_analisis"][value="trimestral"]').checked = true;
+                document.querySelectorAll('.radio-option').forEach(option => option.classList.remove('selected'));
+                document.querySelectorAll('.radio-option')[1].classList.add('selected'); // Segunda opción = trimestral
+                
+                updateFechaSelector(); // Actualizar selector con fechas trimestrales
+                
+                // Usar la última fecha trimestral disponible
+                const ultimaFechaTrimestral = fechasTrimestrales.fechas[fechasTrimestrales.fechas.length - 1];
+                document.getElementById('fecha_seleccionada').value = ultimaFechaTrimestral;
+                
+                console.log('✅ Configuración automática: TRIMESTRAL');
+                console.log('✅ Última fecha trimestral seleccionada:', ultimaFechaTrimestral);
+                
                 await procesarDatos();
                 
                 // **CAMBIAR AUTOMÁTICAMENTE A LA PESTAÑA DE INDICADORES**
@@ -1000,6 +1013,7 @@
                     option.textContent = fechasTrimestrales.etiquetas[index];
                     selector.appendChild(option);
                 });
+                // Seleccionar automáticamente la última fecha trimestral
                 selector.value = fechasTrimestrales.fechas[fechasTrimestrales.fechas.length - 1];
             }
         }
