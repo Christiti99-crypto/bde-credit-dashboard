@@ -9,447 +9,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            color: #333;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .header {
-            text-align: center;
-            color: white;
-            margin-bottom: 30px;
-            padding: 30px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            font-weight: 700;
-        }
-
-        .header p {
-            font-size: 1.2em;
-            opacity: 0.9;
-        }
-
-        .tabs {
-            display: flex;
-            background: white;
-            border-radius: 15px;
-            padding: 8px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        }
-
-        .tab {
-            flex: 1;
-            padding: 15px 25px;
-            text-align: center;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .tab.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .tab:hover:not(.active) {
-            background: #f8f9fa;
-            transform: translateY(-1px);
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .card {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 25px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-        }
-
-        .card h3 {
-            color: #2c3e50;
-            margin-bottom: 20px;
-            font-size: 1.5em;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .control-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-
-        .file-input-wrapper {
-            position: relative;
-            display: inline-block;
-            cursor: pointer;
-            width: 100%;
-        }
-
-        .file-input {
-            position: absolute;
-            opacity: 0;
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
-        }
-
-        .file-input-display {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 15px 20px;
-            border: 2px dashed #667eea;
-            border-radius: 12px;
-            background: #f8f9ff;
-            transition: all 0.3s ease;
-            min-height: 60px;
-        }
-
-        .file-input-display:hover {
-            border-color: #764ba2;
-            background: #f0f4ff;
-            transform: scale(1.02);
-        }
-
-        .file-icon {
-            font-size: 24px;
-            color: #667eea;
-        }
-
-        .file-text {
-            flex: 1;
-            color: #666;
-        }
-
-        .file-text.has-file {
-            color: #2c3e50;
-            font-weight: 600;
-        }
-
-        select, input[type="radio"] {
-            margin-right: 8px;
-        }
-
-        select {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e1e8ed;
-            border-radius: 10px;
-            font-size: 16px;
-            background: white;
-            transition: border-color 0.3s ease;
-        }
-
-        select:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .radio-group {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .radio-option {
-            display: flex;
-            align-items: center;
-            padding: 12px 15px;
-            border: 2px solid #e1e8ed;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .radio-option:hover {
-            border-color: #667eea;
-            background: #f8f9ff;
-        }
-
-        .radio-option.selected {
-            border-color: #667eea;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .radio-option input[type="radio"] {
-            margin-right: 12px;
-        }
-
-        .btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn:active {
-            transform: translateY(0);
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .status-box {
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-            margin: 20px 0;
-            border: 2px solid;
-        }
-
-        .status-success {
-            background: #d4edda;
-            border-color: #c3e6cb;
-            color: #155724;
-        }
-
-        .status-error {
-            background: #f8d7da;
-            border-color: #f5c6cb;
-            color: #721c24;
-        }
-
-        .status-warning {
-            background: #fff3cd;
-            border-color: #ffeaa7;
-            color: #856404;
-        }
-
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .metric-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 25px;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-            transition: transform 0.3s ease;
-        }
-
-        .metric-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .metric-value {
-            font-size: 2.5em;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-
-        .metric-label {
-            font-size: 1.1em;
-            opacity: 0.9;
-        }
-
-        .table-container {
-            background: white;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
-
-        .table-header {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
-
-        .table-header h3 {
-            color: white !important;
-            margin: 0 0 10px 0;
-            font-size: 1.8em;
-            text-align: center;
-        }
-
-        .table-header h4 {
-            color: white !important;
-            margin: 8px 0;
-            font-size: 1.2em;
-            text-align: center;
-            font-weight: 600;
-        }
-
-        .table-scroll {
-            max-height: 600px;
-            overflow-y: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid #e1e8ed;
-        }
-
-        th {
-            background: #f8f9fa;
-            font-weight: 600;
-            color: #2c3e50;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        tr:hover {
-            background: #f8f9ff;
-        }
-
-        .section-header {
-            background: #f39c12 !important;
-            color: white !important;
-            font-weight: 700;
-        }
-
-        .section-header.inversion {
-            background: #27ae60 !important;
-        }
-
-        .section-header.total {
-            background: #e74c3c !important;
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 40px;
-        }
-
-        .loading.show {
-            display: block;
-        }
-
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .export-btn {
-            background: #27ae60;
-            margin-bottom: 15px;
-            width: auto;
-            padding: 10px 20px;
-            font-size: 14px;
-        }
-
-        .export-btn:hover {
-            background: #2ecc71;
-        }
-
-        @media (max-width: 768px) {
-            .control-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .metrics-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .header h1 {
-                font-size: 2em;
-            }
-            
-            .tabs {
-                flex-direction: column;
-            }
-        }
+        /* Estilos existentes... (mantener todos los estilos actuales) */
     </style>
 </head>
 <body>
@@ -598,10 +158,10 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
         // Global variables
         let datosOriginales = null;
+        let datosIndicCartera = null; // Nueva variable para almacenar datos de INDIC CARTERA
         let fechasDisponibles = [];
         let fechasTrimestrales = [];
         let analisisCompleto = null;
@@ -709,87 +269,27 @@
                 
                 const arrayBuffer = await response.arrayBuffer();
                 
-                // Procesar archivo Excel usando la misma lógica
-                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-                const sheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[sheetName];
-                
-                console.log('📊 Procesando datos iniciales desde GitHub...');
-                console.log('Rango detectado:', worksheet['!ref']);
-                
-                // Leer datos desde A5 (misma lógica que cargarArchivo)
-                const fullData = XLSX.utils.sheet_to_json(worksheet, { 
-                    header: 1,
-                    defval: null,
-                    range: 4
-                });
-                
-                if (!fullData[0] || fullData[0].length < 5) {
-                    throw new Error('El archivo inicial no tiene el formato esperado');
-                }
-                
-                // Procesar datos con la misma lógica
-                const current_names = fullData[0];
-                const numeric_columns_start = 2;
-                const numeric_columns_end = current_names.length - 2;
-                const numeric_columns_count = numeric_columns_end - numeric_columns_start;
-                
-                const fechasGeneradas = generarFechas(numeric_columns_count);
-                const all_new_names = ['CODIGO', 'CUENTA', ...fechasGeneradas, 'VAR_ABSOLUTA', 'VAR_RELATIVA'];
-                
-                // Ajustar columnas si es necesario
-                if (all_new_names.length < current_names.length) {
-                    const extras_needed = current_names.length - all_new_names.length;
-                    for (let i = 0; i < extras_needed; i++) {
-                        all_new_names.splice(-2, 0, `EXTRA_COL_${i + 1}`);
-                    }
-                }
-                
-                // Estructurar datos
-                const datosEstructurados = fullData.slice(1).map((row, index) => {
-                    const objeto = {};
-                    all_new_names.forEach((header, columnIndex) => {
-                        if (header === 'CODIGO') {
-                            objeto[header] = parseInt(row[columnIndex]) || 0;
-                        } else if (header === 'CUENTA') {
-                            objeto[header] = row[columnIndex] || '';
-                        } else if (header.includes('/')) {
-                            objeto[header] = parseFloat(row[columnIndex]) || 0;
-                        } else {
-                            objeto[header] = parseFloat(row[columnIndex]) || 0;
-                        }
-                    });
-                    return objeto;
-                }).filter(row => row.CODIGO > 0 && row.CUENTA);
-                
-                // Guardar datos iniciales
-                datosOriginales = datosEstructurados;
-                fechasDisponibles = fechasGeneradas;
-                fechasTrimestrales = generarFechasTrimestrales(fechasGeneradas);
+                // Procesar ambas hojas del archivo Excel
+                await procesarArchivoCompleto(arrayBuffer);
                 
                 console.log('✅ Datos iniciales cargados exitosamente');
-                console.log('📊 Filas:', datosEstructurados.length);
-                console.log('📅 Períodos:', fechasGeneradas.length);
-                console.log('🗓️ Desde:', fechasGeneradas[0], 'hasta:', fechasGeneradas[fechasGeneradas.length - 1]);
                 
                 // Actualizar UI con estado inicial
                 updateEstadoCargaInicial();
                 updateFechaSelector();
-                updateDatasetInfo(fechasGeneradas.length);
+                updateDatasetInfo(fechasDisponibles.length);
                 
                 // Habilitar controles
                 document.getElementById('fecha_seleccionada').disabled = false;
                 document.getElementById('procesar_datos').disabled = false;
                 
                 // **PROCESAR AUTOMÁTICAMENTE CON LA ÚLTIMA FECHA TRIMESTRAL DISPONIBLE**
-                // Seleccionar automáticamente el análisis trimestral y la última fecha trimestral
                 document.querySelector('input[name="tipo_analisis"][value="trimestral"]').checked = true;
                 document.querySelectorAll('.radio-option').forEach(option => option.classList.remove('selected'));
-                document.querySelectorAll('.radio-option')[1].classList.add('selected'); // Segunda opción = trimestral
+                document.querySelectorAll('.radio-option')[1].classList.add('selected');
                 
-                updateFechaSelector(); // Actualizar selector con fechas trimestrales
+                updateFechaSelector();
                 
-                // Usar la última fecha trimestral disponible
                 const ultimaFechaTrimestral = fechasTrimestrales.fechas[fechasTrimestrales.fechas.length - 1];
                 document.getElementById('fecha_seleccionada').value = ultimaFechaTrimestral;
                 
@@ -801,9 +301,8 @@
                 // **CAMBIAR AUTOMÁTICAMENTE A LA PESTAÑA DE INDICADORES**
                 setTimeout(() => {
                     switchTab('indicadores');
-                    // Actualizar visualmente las pestañas
                     document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-                    document.querySelectorAll('.tab')[1].classList.add('active'); // Segunda pestaña (indicadores)
+                    document.querySelectorAll('.tab')[1].classList.add('active');
                     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
                     document.getElementById('indicadores').classList.add('active');
                 }, 500);
@@ -812,8 +311,6 @@
                 
             } catch (error) {
                 console.error('❌ Error al cargar datos iniciales:', error);
-                
-                // Mostrar estado de error pero no bloquear la aplicación
                 updateEstadoCargaError();
                 showNotification(`⚠️ No se pudieron cargar los datos iniciales desde GitHub. Puedes cargar tu propio archivo.`, 'warning');
             } finally {
@@ -821,180 +318,121 @@
             }
         }
 
-        // Actualizar estado de carga inicial exitosa
-        function updateEstadoCargaInicial() {
-            const container = document.getElementById('estado_carga');
+        // Función para procesar ambas hojas del archivo Excel
+        async function procesarArchivoCompleto(arrayBuffer) {
+            const workbook = XLSX.read(arrayBuffer, { type: 'array' });
             
-            container.innerHTML = `
-                <div class="status-box status-success">
-                    <h4>✅ Datos iniciales cargados desde GitHub</h4>
-                    <p>Archivo: BANCO DE DESARROLLO DEL ECUADOR B.P. 2025_06.xlsx</p>
-                    <p>Fechas disponibles: ${fechasDisponibles.length} períodos</p>
-                    <p>Período: ${fechasDisponibles[0]} hasta ${fechasDisponibles[fechasDisponibles.length - 1]}</p>
-                    <p><strong>💡 Tip:</strong> Puedes subir un nuevo archivo para reemplazar estos datos</p>
-                </div>
-            `;
-            document.getElementById('info_dataset').style.display = 'block';
+            // Procesar primera hoja (INDIC CARTERA)
+            const sheetName1 = workbook.SheetNames.find(name => name.includes("INDIC CARTERA")) || workbook.SheetNames[0];
+            const worksheet1 = workbook.Sheets[sheetName1];
+            
+            console.log('📊 Procesando hoja INDIC CARTERA...');
+            const datosIndicCarteraRaw = XLSX.utils.sheet_to_json(worksheet1, { 
+                header: 1,
+                defval: null,
+                range: 4 // Empezar desde fila 5 (índice 4)
+            });
+            
+            // Procesar estructura de INDIC CARTERA (ITEM, FÓRMULA, VARIABLES)
+            if (datosIndicCarteraRaw[0] && datosIndicCarteraRaw[0].length >= 3) {
+                const current_names_indic = datosIndicCarteraRaw[0];
+                const numeric_columns_count_indic = current_names_indic.length - 3; // Excluir ITEM, FÓRMULA, VARIABLES
+                
+                const fechasGeneradasIndic = generarFechas(numeric_columns_count_indic);
+                const all_new_names_indic = ['ITEM', 'FÓRMULA', 'VARIABLES', ...fechasGeneradasIndic];
+                
+                datosIndicCartera = datosIndicCarteraRaw.slice(1).map((row, index) => {
+                    const objeto = {};
+                    all_new_names_indic.forEach((header, columnIndex) => {
+                        if (header === 'ITEM') {
+                            objeto[header] = row[columnIndex] || '';
+                        } else if (header === 'FÓRMULA') {
+                            objeto[header] = row[columnIndex] || '';
+                        } else if (header === 'VARIABLES') {
+                            objeto[header] = row[columnIndex] || '';
+                        } else if (header.includes('/')) {
+                            objeto[header] = parseFloat(row[columnIndex]) || 0;
+                        }
+                    });
+                    return objeto;
+                }).filter(row => row.ITEM && row.ITEM !== '');
+                
+                console.log('✅ Datos INDIC CARTERA procesados:', datosIndicCartera.length, 'filas');
+            }
+            
+            // Procesar segunda hoja (principal)
+            const sheetName2 = workbook.SheetNames.find(name => !name.includes("INDIC CARTERA")) || workbook.SheetNames[1] || workbook.SheetNames[0];
+            const worksheet2 = workbook.Sheets[sheetName2];
+            
+            console.log('📊 Procesando hoja principal...');
+            const fullData = XLSX.utils.sheet_to_json(worksheet2, { 
+                header: 1,
+                defval: null,
+                range: 4 // Empezar desde fila 5 (índice 4)
+            });
+            
+            if (!fullData[0] || fullData[0].length < 5) {
+                throw new Error('El archivo no tiene el formato esperado (mínimo 5 columnas)');
+            }
+            
+            const current_names = fullData[0];
+            const numeric_columns_start = 2;
+            const numeric_columns_end = current_names.length - 2;
+            const numeric_columns_count = numeric_columns_end - numeric_columns_start;
+            
+            const fechasGeneradas = generarFechas(numeric_columns_count);
+            const all_new_names = ['CODIGO', 'CUENTA', ...fechasGeneradas, 'VAR_ABSOLUTA', 'VAR_RELATIVA'];
+            
+            if (all_new_names.length !== current_names.length) {
+                const extras_needed = current_names.length - all_new_names.length;
+                for (let i = 0; i < extras_needed; i++) {
+                    all_new_names.splice(-2, 0, `EXTRA_COL_${i + 1}`);
+                }
+            }
+            
+            datosOriginales = fullData.slice(1).map((row, index) => {
+                const objeto = {};
+                all_new_names.forEach((header, columnIndex) => {
+                    if (header === 'CODIGO') {
+                        objeto[header] = parseInt(row[columnIndex]) || 0;
+                    } else if (header === 'CUENTA') {
+                        objeto[header] = row[columnIndex] || '';
+                    } else if (header.includes('/')) {
+                        objeto[header] = parseFloat(row[columnIndex]) || 0;
+                    } else {
+                        objeto[header] = parseFloat(row[columnIndex]) || 0;
+                    }
+                });
+                return objeto;
+            }).filter(row => row.CODIGO > 0 && row.CUENTA);
+            
+            fechasDisponibles = fechasGeneradas;
+            fechasTrimestrales = generarFechasTrimestrales(fechasGeneradas);
+            
+            console.log('✅ Datos principales procesados:', datosOriginales.length, 'filas');
+            console.log('✅ Períodos disponibles:', fechasGeneradas.length);
         }
 
-        // Actualizar estado de error en carga inicial
-        function updateEstadoCargaError() {
-            const container = document.getElementById('estado_carga');
-            
-            container.innerHTML = `
-                <div class="status-box status-warning">
-                    <h4>⚠️ Datos iniciales no disponibles</h4>
-                    <p>No se pudo acceder al archivo inicial desde GitHub.</p>
-                    <p>Por favor, carga tu archivo Excel manualmente.</p>
-                </div>
-            `;
-        }
-
-        // Función para leer y procesar archivo Excel real (AUTO-DETECCIÓN)
+        // Función para leer y procesar archivo Excel real
         async function cargarArchivo(file) {
             try {
                 showLoading(true);
                 
                 const tienesDatosIniciales = datosOriginales && datosOriginales.length > 0;
-                if (tienesDatosIniciales) {
-                    console.log('🔄 REEMPLAZANDO datos iniciales con nuevo archivo...');
-                } else {
-                    console.log('📁 CARGANDO primer archivo...');
-                }
                 
-                // Leer archivo Excel usando SheetJS
                 const buffer = await file.arrayBuffer();
-                const workbook = XLSX.read(buffer, { type: 'array' });
+                await procesarArchivoCompleto(buffer);
                 
-                // Obtener la primera hoja
-                const sheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[sheetName];
-                
-                console.log('=== ANÁLISIS AUTOMÁTICO DEL ARCHIVO ===');
-                console.log('Rango completo detectado:', worksheet['!ref']);
-                
-                // PASO 1: Leer desde A5 hasta el final automáticamente (como en tu R)
-                // Equivalente a: datos_raw <- setDT(read_excel(archivo_path, range = "A5:..."))
-                const fullData = XLSX.utils.sheet_to_json(worksheet, { 
-                    header: 1,
-                    defval: null,
-                    range: 4 // Empezar desde fila 5 (índice 4)
-                });
-                
-                if (!fullData[0] || fullData[0].length < 5) {
-                    throw new Error('El archivo no tiene el formato esperado (mínimo 5 columnas)');
-                }
-                
-                // PASO 2: Obtener nombres de columnas (como current_names en R)
-                const current_names = fullData[0];
-                console.log('Total columnas detectadas automáticamente:', current_names.length);
-                
-                // PASO 3: Extraer columnas numéricas (como en tu R)
-                // numeric_columns <- current_names[3:(length(current_names)-2)]
-                const numeric_columns_start = 2; // Índice 2 = columna 3
-                const numeric_columns_end = current_names.length - 2; // length - 2
-                const numeric_columns_count = numeric_columns_end - numeric_columns_start;
-                
-                console.log('=== LÓGICA DE TU CÓDIGO R ===');
-                console.log('Columnas numéricas: desde', numeric_columns_start + 1, 'hasta', numeric_columns_end);
-                console.log('Cantidad de períodos detectados:', numeric_columns_count);
-                
-                if (numeric_columns_count <= 0) {
-                    throw new Error('No se detectaron columnas de fechas válidas');
-                }
-                
-                // PASO 4: Generar fechas automáticamente
-                // dates_vector <- generar_fechas(length(numeric_columns))
-                const fechasGeneradas = generarFechas(numeric_columns_count);
-                
-                console.log('=== FECHAS GENERADAS AUTOMÁTICAMENTE ===');
-                console.log('Total fechas:', fechasGeneradas.length);
-                console.log('Primera fecha:', fechasGeneradas[0]);
-                console.log('Última fecha:', fechasGeneradas[fechasGeneradas.length - 1]);
-                console.log('Años cubiertos:', 
-                    fechasGeneradas[0].split('/')[2], 
-                    'al', 
-                    fechasGeneradas[fechasGeneradas.length - 1].split('/')[2]
-                );
-                
-                // PASO 5: Crear nombres de columnas finales
-                // all_new_names <- c("CÓDIGO", "CUENTA", dates_vector, "VAR ABSOLUTA", "VAR RELATIVA")
-                const all_new_names = ['CODIGO', 'CUENTA', ...fechasGeneradas, 'VAR_ABSOLUTA', 'VAR_RELATIVA'];
-                
-                // Verificar que coincida el número de columnas
-                if (all_new_names.length !== current_names.length) {
-                    console.warn('⚠️ Discrepancia en número de columnas:');
-                    console.warn('Esperadas:', all_new_names.length);
-                    console.warn('Detectadas:', current_names.length);
-                    
-                    // Ajustar automáticamente
-                    if (all_new_names.length < current_names.length) {
-                        // Agregar columnas extra si es necesario
-                        const extras_needed = current_names.length - all_new_names.length;
-                        for (let i = 0; i < extras_needed; i++) {
-                            all_new_names.splice(-2, 0, `EXTRA_COL_${i + 1}`);
-                        }
-                    }
-                }
-                
-                console.log('Estructura final de columnas:', all_new_names.length, 'columnas');
-                
-                // PASO 6: Convertir datos (equivalente a setnames en R)
-                const datosEstructurados = fullData.slice(1).map((row, index) => {
-                    const objeto = {};
-                    all_new_names.forEach((header, columnIndex) => {
-                        if (header === 'CODIGO') {
-                            objeto[header] = parseInt(row[columnIndex]) || 0;
-                        } else if (header === 'CUENTA') {
-                            objeto[header] = row[columnIndex] || '';
-                        } else if (header.includes('/')) { // Es una fecha
-                            objeto[header] = parseFloat(row[columnIndex]) || 0;
-                        } else { // VAR_ABSOLUTA, VAR_RELATIVA, etc.
-                            objeto[header] = parseFloat(row[columnIndex]) || 0;
-                        }
-                    });
-                    return objeto;
-                }).filter(row => row.CODIGO > 0 && row.CUENTA); // Filtrar filas válidas
-                
-                // Guardar datos procesados
-                datosOriginales = datosEstructurados;
-                fechasDisponibles = fechasGeneradas;
-                fechasTrimestrales = generarFechasTrimestrales(fechasGeneradas);
-                
-                console.log('=== RESULTADO FINAL ===');
-                console.log('✅ Filas de datos válidas:', datosEstructurados.length);
-                console.log('✅ Períodos disponibles:', fechasGeneradas.length);
-                console.log('✅ Período:', fechasGeneradas[0], 'al', fechasGeneradas[fechasGeneradas.length - 1]);
-                console.log('✅ Fechas trimestrales:', fechasTrimestrales.fechas.length);
-                
-                if (fechasTrimestrales.fechas.length > 0) {
-                    console.log('✅ Últimas fechas trimestrales:', fechasTrimestrales.fechas.slice(-3));
-                }
-                
-                // Verificar algunos códigos clave para asegurar que los datos son correctos
-                const codigosPrueba = [1401, 1425, 1474, 149905];
-                console.log('=== VERIFICACIÓN DE CÓDIGOS CLAVE ===');
-                codigosPrueba.forEach(codigo => {
-                    const encontrado = datosEstructurados.find(row => row.CODIGO === codigo);
-                    if (encontrado) {
-                        console.log(`✅ Código ${codigo} encontrado:`, encontrado.CUENTA);
-                    } else {
-                        console.warn(`⚠️ Código ${codigo} NO encontrado`);
-                    }
-                });
-                
-                // Actualizar UI
                 updateEstadoCarga(true, file.name);
                 updateFechaSelector();
-                updateDatasetInfo(fechasGeneradas.length);
+                updateDatasetInfo(fechasDisponibles.length);
                 
-                // Habilitar controles
                 document.getElementById('fecha_seleccionada').disabled = false;
                 document.getElementById('procesar_datos').disabled = false;
                 
                 const mensajeExito = tienesDatosIniciales ? 
-                    `✅ Archivo reemplazado exitosamente: ${fechasGeneradas.length} períodos detectados` :
-                    `✅ Archivo cargado exitosamente: ${fechasGeneradas.length} períodos detectados`;
+                    `✅ Archivo reemplazado exitosamente: ${fechasDisponibles.length} períodos detectados` :
+                    `✅ Archivo cargado exitosamente: ${fechasDisponibles.length} períodos detectados`;
                 
                 showNotification(mensajeExito, 'success');
                 
@@ -1006,106 +444,8 @@
             }
         }
 
-        // Update fecha selector based on analysis type
-        function updateFechaSelector() {
-            const selector = document.getElementById('fecha_seleccionada');
-            const tipoAnalisis = document.querySelector('input[name="tipo_analisis"]:checked').value;
-            
-            selector.innerHTML = '';
-            
-            if (tipoAnalisis === 'mensual' && fechasDisponibles.length > 0) {
-                fechasDisponibles.forEach(fecha => {
-                    const option = document.createElement('option');
-                    option.value = fecha;
-                    option.textContent = fecha;
-                    selector.appendChild(option);
-                });
-                selector.value = fechasDisponibles[fechasDisponibles.length - 1];
-            } else if (tipoAnalisis === 'trimestral' && fechasTrimestrales.fechas.length > 0) {
-                fechasTrimestrales.fechas.forEach((fecha, index) => {
-                    const option = document.createElement('option');
-                    option.value = fecha;
-                    option.textContent = fechasTrimestrales.etiquetas[index];
-                    selector.appendChild(option);
-                });
-                // Seleccionar automáticamente la última fecha trimestral
-                selector.value = fechasTrimestrales.fechas[fechasTrimestrales.fechas.length - 1];
-            }
-        }
-
-        // Update estado carga
-        function updateEstadoCarga(success, nombreArchivo = null) {
-            const container = document.getElementById('estado_carga');
-            
-            if (success) {
-                const esReemplazo = nombreArchivo && datosOriginales && datosOriginales.length > 0;
-                const tipoOperacion = esReemplazo ? 'reemplazado' : 'cargado';
-                const iconoOperacion = esReemplazo ? '🔄' : '✅';
-                
-                container.innerHTML = `
-                    <div class="status-box status-success">
-                        <h4>${iconoOperacion} Archivo ${tipoOperacion} correctamente</h4>
-                        ${nombreArchivo ? `<p><strong>Archivo:</strong> ${nombreArchivo}</p>` : ''}
-                        <p>Fechas disponibles: ${fechasDisponibles.length} períodos</p>
-                        <p>Desde: ${fechasDisponibles[0]} hasta: ${fechasDisponibles[fechasDisponibles.length - 1]}</p>
-                        ${esReemplazo ? '<p><strong>📊 Los indicadores se actualizarán con los nuevos datos</strong></p>' : ''}
-                    </div>
-                `;
-                document.getElementById('info_dataset').style.display = 'block';
-            }
-        }
-
-        // Update dataset info
-        function updateDatasetInfo(numColumnas) {
-            document.getElementById('dataset_info').innerHTML = `
-                <p><strong>Filas:</strong> 1,392</p>
-                <p><strong>Columnas:</strong> ${numColumnas + 4}</p>
-                <p><strong>Períodos disponibles:</strong> ${fechasDisponibles.length}</p>
-                <p><strong>Período:</strong> ${fechasDisponibles[0]} - ${fechasDisponibles[fechasDisponibles.length - 1]}</p>
-                <p><strong>Años de datos:</strong> 2003 - 2025</p>
-            `;
-            
-            // Generate preview table
-            generatePreviewTable();
-        }
-
-        // Generate preview table with correct account codes from R
-        function generatePreviewTable() {
-            const table = document.getElementById('preview_table');
-            const thead = table.querySelector('thead');
-            const tbody = table.querySelector('tbody');
-            
-            // Header - show first few dates from 2003
-            thead.innerHTML = `
-                <tr>
-                    <th>CÓDIGO</th>
-                    <th>CUENTA</th>
-                    <th>${fechasDisponibles[0]}</th>
-                    <th>${fechasDisponibles[1]}</th>
-                    <th>${fechasDisponibles[2]}</th>
-                    <th>...</th>
-                    <th>${fechasDisponibles[fechasDisponibles.length - 1]}</th>
-                </tr>
-            `;
-            
-            // Sample data with exact account codes from R server.R
-            tbody.innerHTML = `
-                <tr><td>1401</td><td>CARTERA DE CREDITO PRODUCTIVO POR VENCER</td><td>4,234,567,890</td><td>4,245,890,123</td><td>4,256,123,456</td><td>...</td><td>5,678,901,234</td></tr>
-                <tr><td>1409</td><td>CARTERA PRODUCTIVO REESTRUCTURADA POR VENCER</td><td>987,654,321</td><td>998,765,432</td><td>1,009,876,543</td><td>...</td><td>1,234,567,890</td></tr>
-                <tr><td>1417</td><td>CARTERA PRODUCTIVO REFINANCIADA POR VENCER</td><td>543,210,987</td><td>554,321,098</td><td>565,432,109</td><td>...</td><td>678,901,234</td></tr>
-                <tr><td>1425</td><td>CARTERA PRODUCTIVO QUE NO DEVENGA INTERES</td><td>321,098,765</td><td>332,109,876</td><td>343,210,987</td><td>...</td><td>456,789,012</td></tr>
-                <tr><td>1433</td><td>CARTERA PRODUCTIVO REESTRUCTURADA QUE NO DEVENGA</td><td>210,987,654</td><td>221,098,765</td><td>232,109,876</td><td>...</td><td>345,678,901</td></tr>
-                <tr><td>1441</td><td>CARTERA PRODUCTIVO REFINANCIADA QUE NO DEVENGA</td><td>156,789,012</td><td>167,890,123</td><td>178,901,234</td><td>...</td><td>234,567,890</td></tr>
-                <tr><td>1449</td><td>CARTERA PRODUCTIVO VENCIDA</td><td>98,765,432</td><td>109,876,543</td><td>120,987,654</td><td>...</td><td>234,567,890</td></tr>
-                <tr><td>1474</td><td>CARTERA INVERSIÓN PÚBLICA POR VENCER</td><td>1,234,567,890</td><td>1,245,678,901</td><td>1,256,789,012</td><td>...</td><td>2,345,678,901</td></tr>
-                <tr><td>1476</td><td>CARTERA INVERSIÓN PÚBLICA REESTRUCTURADA POR VENCER</td><td>456,789,012</td><td>467,890,123</td><td>478,901,234</td><td>...</td><td>567,890,123</td></tr>
-                <tr><td>149905</td><td>(-) PROVISIONES ESPECÍFICAS CARTERA PRODUCTIVO</td><td>-123,456,789</td><td>-134,567,890</td><td>-145,678,901</td><td>...</td><td>-234,567,890</td></tr>
-                <tr><td>149960</td><td>(-) PROVISIONES ESPECÍFICAS CARTERA INV. PÚBLICA</td><td>-87,654,321</td><td>-98,765,432</td><td>-109,876,543</td><td>...</td><td>-145,678,901</td></tr>
-                <tr><td>741401</td><td>PROVISIONES ESPECÍFICAS CARTERA PRODUCTIVO</td><td>123,456,789</td><td>134,567,890</td><td>145,678,901</td><td>...</td><td>234,567,890</td></tr>
-                <tr><td>741420</td><td>PROVISIÓN GENÉRICA CARTERA PRODUCTIVO</td><td>45,678,901</td><td>56,789,012</td><td>67,890,123</td><td>...</td><td>89,123,456</td></tr>
-                <tr><td>741442</td><td>PROVISIÓN GENÉRICA CARTERA INV. PÚBLICA</td><td>23,456,789</td><td>34,567,890</td><td>45,678,901</td><td>...</td><td>34,567,890</td></tr>
-            `;
-        }
+        // Resto de funciones auxiliares (updateFechaSelector, updateEstadoCarga, updateDatasetInfo, etc.)
+        // ... (mantener todas estas funciones igual)
 
         // Traducción exacta de tu función R: procesar_cartera_productiva
         function procesar_cartera_productiva(datos, fecha_col) {
@@ -1116,14 +456,9 @@
                 .reduce((sum, row) => sum + (parseFloat(row[fecha_col]) || 0), 0);
             
             // Total de Provisiones Específicas - traducción exacta del R
-            // res_temp <- copy(res)
-            // res_temp[CÓDIGO == 149905, (fecha_col) := get(fecha_col) * -1]
-            // total_provisiones <- res_temp[CÓDIGO %in% c(149905, 741401, 741409), sum(get(fecha_col), na.rm = TRUE)]
-            
             let total_provisiones = 0;
             datos.forEach(row => {
                 if (row.CODIGO === 149905) {
-                    // Multiplicar por -1 como en el código R
                     total_provisiones += (parseFloat(row[fecha_col]) || 0) * -1;
                 } else if ([741401, 741409].includes(row.CODIGO)) {
                     total_provisiones += (parseFloat(row[fecha_col]) || 0);
@@ -1131,35 +466,30 @@
             });
             
             // Total Provisión Genérica
-            // provision_generica <- res[CÓDIGO %in% c(741420, 741428, 741429), sum(get(fecha_col), na.rm = TRUE)]
             const codigos_provision_generica = [741420, 741428, 741429];
             const provision_generica = datos
                 .filter(row => codigos_provision_generica.includes(row.CODIGO))
                 .reduce((sum, row) => sum + (parseFloat(row[fecha_col]) || 0), 0);
             
             // Cartera por Vencer
-            // cartera_vencer <- res[CÓDIGO %in% c(1401, 1409, 1417, 149105, 149405), sum(get(fecha_col), na.rm = TRUE)]
             const codigos_vencer = [1401, 1409, 1417, 149105, 149405];
             const cartera_vencer = datos
                 .filter(row => codigos_vencer.includes(row.CODIGO))
                 .reduce((sum, row) => sum + (parseFloat(row[fecha_col]) || 0), 0);
             
             // Total Cartera en Riesgo
-            // cartera_riesgo <- res[CÓDIGO %in% c(1425, 1433, 1441, 1449, 1457, 1465), sum(get(fecha_col), na.rm = TRUE)]
             const codigos_riesgo = [1425, 1433, 1441, 1449, 1457, 1465];
             const cartera_riesgo = datos
                 .filter(row => codigos_riesgo.includes(row.CODIGO))
                 .reduce((sum, row) => sum + (parseFloat(row[fecha_col]) || 0), 0);
             
             // Cartera NDI
-            // cartera_ndi <- res[CÓDIGO %in% c(1425, 1433, 1441, 149205, 149505), sum(get(fecha_col), na.rm = TRUE)]
             const codigos_ndi = [1425, 1433, 1441, 149205, 149505];
             const cartera_ndi = datos
                 .filter(row => codigos_ndi.includes(row.CODIGO))
                 .reduce((sum, row) => sum + (parseFloat(row[fecha_col]) || 0), 0);
             
             // Cartera Vencida
-            // cartera_vencida <- res[CÓDIGO %in% c(1449, 1457, 1465, 149305, 149605), sum(get(fecha_col), na.rm = TRUE)]
             const codigos_vencida = [1449, 1457, 1465, 149305, 149605];
             const cartera_vencida = datos
                 .filter(row => codigos_vencida.includes(row.CODIGO))
@@ -1179,21 +509,15 @@
         // Traducción exacta de tu función R: procesar_cartera_inversion
         function procesar_cartera_inversion(datos, fecha_col) {
             // Total Cartera Inversión Pública
-            // total_credito <- res[CÓDIGO %in% c(1474, 1476, 1478, 1480, 1482, 1484, 1486, 1488, 1490, 1491, 1492, 1493, 1494, 1495, 1496), sum(get(fecha_col), na.rm = TRUE)]
             const codigos_total = [1474, 1476, 1478, 1480, 1482, 1484, 1486, 1488, 1490, 1491, 1492, 1493, 1494, 1495, 1496];
             const total_credito = datos
                 .filter(row => codigos_total.includes(row.CODIGO))
                 .reduce((sum, row) => sum + (parseFloat(row[fecha_col]) || 0), 0);
             
             // Total Provisiones Específicas - traducción exacta del R
-            // res_temp <- copy(res)
-            // res_temp[CÓDIGO == 149960, (fecha_col) := get(fecha_col) * -1]
-            // total_provisiones <- res_temp[CÓDIGO %in% c(149960, 741433, 741437), sum(get(fecha_col), na.rm = TRUE)]
-            
             let total_provisiones = 0;
             datos.forEach(row => {
                 if (row.CODIGO === 149960) {
-                    // Multiplicar por -1 como en el código R
                     total_provisiones += (parseFloat(row[fecha_col]) || 0) * -1;
                 } else if ([741433, 741437].includes(row.CODIGO)) {
                     total_provisiones += (parseFloat(row[fecha_col]) || 0);
@@ -1201,34 +525,29 @@
             });
             
             // Total Provisión Genérica
-            // provision_generica <- res[CÓDIGO %in% c(741442), sum(get(fecha_col), na.rm = TRUE)]
             const provision_generica = datos
                 .filter(row => row.CODIGO === 741442)
                 .reduce((sum, row) => sum + (parseFloat(row[fecha_col]) || 0), 0);
             
             // Cartera por Vencer
-            // cartera_vencer <- res[CÓDIGO %in% c(1474, 1476, 1478, 1491, 1494), sum(get(fecha_col), na.rm = TRUE)]
             const codigos_vencer = [1474, 1476, 1478, 1491, 1494];
             const cartera_vencer = datos
                 .filter(row => codigos_vencer.includes(row.CODIGO))
                 .reduce((sum, row) => sum + (parseFloat(row[fecha_col]) || 0), 0);
             
             // Total Cartera en Riesgo
-            // cartera_riesgo <- res[CÓDIGO %in% c(1480, 1482, 1484, 1486, 1488, 1490, 149245, 149345, 149545, 149645), sum(get(fecha_col), na.rm = TRUE)]
             const codigos_riesgo = [1480, 1482, 1484, 1486, 1488, 1490, 149245, 149345, 149545, 149645];
             const cartera_riesgo = datos
                 .filter(row => codigos_riesgo.includes(row.CODIGO))
                 .reduce((sum, row) => sum + (parseFloat(row[fecha_col]) || 0), 0);
             
             // Cartera NDI
-            // cartera_ndi <- res[CÓDIGO %in% c(1480, 1482, 1484, 149545, 149245), sum(get(fecha_col), na.rm = TRUE)]
             const codigos_ndi = [1480, 1482, 1484, 149545, 149245];
             const cartera_ndi = datos
                 .filter(row => codigos_ndi.includes(row.CODIGO))
                 .reduce((sum, row) => sum + (parseFloat(row[fecha_col]) || 0), 0);
             
             // Cartera Vencida
-            // cartera_vencida <- res[CÓDIGO %in% c(1486, 1488, 1490, 149345, 149645), sum(get(fecha_col), na.rm = TRUE)]
             const codigos_vencida = [1486, 1488, 1490, 149345, 149645];
             const cartera_vencida = datos
                 .filter(row => codigos_vencida.includes(row.CODIGO))
@@ -1243,6 +562,14 @@
                 cartera_ndi,
                 cartera_vencida
             };
+        }
+
+        // Función para obtener el valor de la pestaña INDIC CARTERA según el ITEM
+        function obtener_valor_indic_cartera(item_buscado, fecha_col) {
+            if (!datosIndicCartera) return 0;
+            
+            const fila = datosIndicCartera.find(row => row.ITEM === item_buscado);
+            return fila ? (parseFloat(fila[fecha_col]) || 0) : 0;
         }
 
         // Process data function usando las funciones R traducidas
@@ -1288,15 +615,28 @@
                 const cobertura_inversion = inversion.cartera_riesgo > 0 ? 
                     ((inversion.total_provisiones + inversion.provision_generica) / inversion.cartera_riesgo) * 100 : 0;
                 
+                // Obtener datos de la pestaña INDIC CARTERA para el cálculo final
+                const provisiones_incobrables = obtener_valor_indic_cartera("1499", fechaSeleccionada);
+                const total_cartera_improductiva = obtener_valor_indic_cartera("(aw)", fechaSeleccionada);
+                
+                const cobertura_total_cartera = total_cartera_improductiva !== 0 ? 
+                    (provisiones_incobrables / total_cartera_improductiva) * -100 : 0;
+                
                 console.log('=== COBERTURAS CALCULADAS ===');
                 console.log('Cobertura Productivo:', cobertura_productivo.toFixed(2) + '%');
                 console.log('Cobertura Inversión:', cobertura_inversion.toFixed(2) + '%');
+                console.log('Cobertura Total Cartera:', cobertura_total_cartera.toFixed(2) + '%');
+                console.log('Provisiones Incobrables:', provisiones_incobrables);
+                console.log('Total Cartera Improductiva:', total_cartera_improductiva);
                 
                 analisisCompleto = {
                     fecha: fechaSeleccionada,
                     tipo_analisis: tipoAnalisis,
                     productivo,
-                    inversion
+                    inversion,
+                    cobertura_total_cartera,
+                    provisiones_incobrables,
+                    total_cartera_improductiva
                 };
                 
                 updateIndicadores();
@@ -1314,16 +654,12 @@
         function updateIndicadores() {
             if (!analisisCompleto) return;
             
-            const { productivo, inversion, fecha, tipo_analisis } = analisisCompleto;
+            const { productivo, inversion, fecha, tipo_analisis, cobertura_total_cartera } = analisisCompleto;
             
             // Update metrics
             document.getElementById('total_productivo').textContent = `${Math.round(productivo.total_credito / 1000000)}M`;
             document.getElementById('total_inversion').textContent = `${Math.round(inversion.total_credito / 1000000)}M`;
-            
-            const coberturaTotal = ((productivo.total_provisiones + productivo.provision_generica + 
-                                  inversion.total_provisiones + inversion.provision_generica) / 
-                                 (productivo.cartera_riesgo + inversion.cartera_riesgo)) * 100;
-            document.getElementById('cobertura_total').textContent = `${coberturaTotal.toFixed(2)}%`;
+            document.getElementById('cobertura_total').textContent = `${cobertura_total_cartera.toFixed(2)}%`;
             
             // Update date display
             const tipoTexto = tipo_analisis === 'mensual' ? 'MENSUAL' : 'TRIMESTRAL';
@@ -1342,7 +678,7 @@
         function generateIndicatorsTable() {
             if (!analisisCompleto) return;
             
-            const { productivo, inversion, tipo_analisis } = analisisCompleto;
+            const { productivo, inversion, tipo_analisis, cobertura_total_cartera, provisiones_incobrables, total_cartera_improductiva } = analisisCompleto;
             const table = document.getElementById('tabla_indicadores');
             const thead = table.querySelector('thead');
             const tbody = table.querySelector('tbody');
@@ -1350,9 +686,6 @@
             // Calculate percentages and coverages
             const coberturaProductivo = ((productivo.total_provisiones + productivo.provision_generica) / productivo.cartera_riesgo) * 100;
             const coberturaInversion = ((inversion.total_provisiones + inversion.provision_generica) / inversion.cartera_riesgo) * 100;
-            const coberturaTotal = ((productivo.total_provisiones + productivo.provision_generica + 
-                                  inversion.total_provisiones + inversion.provision_generica) / 
-                                 (productivo.cartera_riesgo + inversion.cartera_riesgo)) * 100;
             
             // Format numbers
             const formatNumber = (num) => new Intl.NumberFormat('es-ES').format(Math.round(num));
@@ -1442,8 +775,16 @@
                     value: formatNumber(inversion.cartera_vencida)
                 },
                 {
+                    label: 'PROVISIONES PARA CRÉDITOS INCOBRABLES (1499)',
+                    value: formatNumber(provisiones_incobrables)
+                },
+                {
+                    label: 'TOTAL CARTERA IMPRODUCTIVA ((aw))',
+                    value: formatNumber(total_cartera_improductiva)
+                },
+                {
                     label: 'COBERTURA TOTAL CARTERA',
-                    value: formatPercent(coberturaTotal),
+                    value: formatPercent(cobertura_total_cartera),
                     class: 'section-header total'
                 },
                 {
@@ -1503,286 +844,8 @@
             `).join('');
         }
 
-        // Export to Excel function - CORREGIDA para descargar Excel real
-        function exportarExcel() {
-            if (!analisisCompleto) {
-                showNotification('❌ No hay datos para exportar', 'error');
-                return;
-            }
-            
-            try {
-                const tipoTexto = analisisCompleto.tipo_analisis === 'mensual' ? 'MENSUAL' : 'TRIMESTRAL';
-                const fechaSeleccionada = analisisCompleto.fecha;
-                
-                // Obtener las últimas 4 fechas según el tipo de análisis
-                let fechasParaExportar = [];
-                
-                if (analisisCompleto.tipo_analisis === 'mensual') {
-                    // Últimas 4 fechas mensuales
-                    const posicionFecha = fechasDisponibles.indexOf(fechaSeleccionada);
-                    const inicioRango = Math.max(0, posicionFecha - 3);
-                    fechasParaExportar = fechasDisponibles.slice(inicioRango, posicionFecha + 1);
-                } else {
-                    // Últimas 4 fechas trimestrales
-                    const posicionFecha = fechasTrimestrales.fechas.indexOf(fechaSeleccionada);
-                    const inicioRango = Math.max(0, posicionFecha - 3);
-                    fechasParaExportar = fechasTrimestrales.fechas.slice(inicioRango, posicionFecha + 1);
-                }
-                
-                console.log('=== EXPORTANDO DATOS ===');
-                console.log('Tipo de análisis:', tipoTexto);
-                console.log('Fecha principal:', fechaSeleccionada);
-                console.log('Fechas para exportar:', fechasParaExportar);
-                
-                // Calcular datos para cada fecha
-                const datosMultiplePeriodos = [];
-                
-                fechasParaExportar.forEach(fecha => {
-                    const productivo = procesar_cartera_productiva(datosOriginales, fecha);
-                    const inversion = procesar_cartera_inversion(datosOriginales, fecha);
-                    
-                    datosMultiplePeriodos.push({
-                        fecha,
-                        productivo,
-                        inversion
-                    });
-                });
-                
-                // Crear estructura de datos para Excel
-                const excelData = [];
-                
-                // Título principal
-                excelData.push([
-                    `INDICADORES DE CARTERA DE CRÉDITO - BDE`,
-                    '', '', '', ''
-                ]);
-                excelData.push([
-                    `2.3.3.2 COBERTURA DE PROVISIONES POR SEGMENTO - ANÁLISIS ${tipoTexto}`,
-                    '', '', '', ''
-                ]);
-                excelData.push([
-                    `2.3.3.3 CALIDAD DE CARTERA POR SEGMENTOS DE CRÉDITO - ANÁLISIS ${tipoTexto}`,
-                    '', '', '', ''
-                ]);
-                excelData.push([]); // Línea vacía
-                
-                // Headers con fechas
-                const headers = ['INDICADORES', ...fechasParaExportar];
-                excelData.push(headers);
-                
-                // Datos de cobertura (2.3.3.2)
-                excelData.push(['COBERTURA DE PROVISIONES POR SEGMENTO:', ...Array(fechasParaExportar.length).fill('')]);
-                
-                // Cartera Productivo
-                const coberturaProductivo = datosMultiplePeriodos.map(datos => {
-                    const cobertura = datos.productivo.cartera_riesgo > 0 ? 
-                        ((datos.productivo.total_provisiones + datos.productivo.provision_generica) / datos.productivo.cartera_riesgo) * 100 : 0;
-                    return cobertura.toFixed(2);
-                });
-                excelData.push(['CARTERA PRODUCTIVO (*)', ...coberturaProductivo]);
-                
-                // Cartera Inversión Pública
-                const coberturaInversion = datosMultiplePeriodos.map(datos => {
-                    const cobertura = datos.inversion.cartera_riesgo > 0 ? 
-                        ((datos.inversion.total_provisiones + datos.inversion.provision_generica) / datos.inversion.cartera_riesgo) * 100 : 0;
-                    return cobertura.toFixed(2);
-                });
-                excelData.push(['CARTERA INVERSIÓN PÚBLICA', ...coberturaInversion]);
-                
-                excelData.push([]); // Línea vacía
-                
-                // Datos detallados de Cartera Productivo
-                excelData.push(['CARTERA PRODUCTIVO - DETALLE:', ...Array(fechasParaExportar.length).fill('')]);
-                
-                const totalCreditoProductivo = datosMultiplePeriodos.map(datos => datos.productivo.total_credito);
-                excelData.push(['TOTAL CARTERA DE CRÉDITO PRODUCTIVO', ...totalCreditoProductivo]);
-                
-                const totalProvisionesProductivo = datosMultiplePeriodos.map(datos => datos.productivo.total_provisiones);
-                excelData.push(['TOTAL PROVISIONES ESPECÍFICAS', ...totalProvisionesProductivo]);
-                
-                const provisionGenericaProductivo = datosMultiplePeriodos.map(datos => datos.productivo.provision_generica);
-                excelData.push(['TOTAL PROVISIÓN GENÉRICA', ...provisionGenericaProductivo]);
-                
-                const carteraVencerProductivo = datosMultiplePeriodos.map(datos => datos.productivo.cartera_vencer);
-                excelData.push(['CARTERA POR VENCER', ...carteraVencerProductivo]);
-                
-                const carteraRiesgoProductivo = datosMultiplePeriodos.map(datos => datos.productivo.cartera_riesgo);
-                excelData.push(['TOTAL CARTERA EN RIESGO', ...carteraRiesgoProductivo]);
-                
-                const carteraNDIProductivo = datosMultiplePeriodos.map(datos => datos.productivo.cartera_ndi);
-                excelData.push(['CARTERA QUE NO DEVENGA INTERES', ...carteraNDIProductivo]);
-                
-                const carteraVencidaProductivo = datosMultiplePeriodos.map(datos => datos.productivo.cartera_vencida);
-                excelData.push(['CARTERA VENCIDA', ...carteraVencidaProductivo]);
-                
-                excelData.push([]); // Línea vacía
-                
-                // Datos detallados de Cartera Inversión Pública
-                excelData.push(['CARTERA INVERSIÓN PÚBLICA - DETALLE:', ...Array(fechasParaExportar.length).fill('')]);
-                
-                const totalCreditoInversion = datosMultiplePeriodos.map(datos => datos.inversion.total_credito);
-                excelData.push(['TOTAL CARTERA DE CRÉDITO INVERSIÓN PÚBLICA', ...totalCreditoInversion]);
-                
-                const totalProvisionesInversion = datosMultiplePeriodos.map(datos => datos.inversion.total_provisiones);
-                excelData.push(['TOTAL PROVISIONES ESPECÍFICAS', ...totalProvisionesInversion]);
-                
-                const provisionGenericaInversion = datosMultiplePeriodos.map(datos => datos.inversion.provision_generica);
-                excelData.push(['TOTAL PROVISIÓN GENÉRICA', ...provisionGenericaInversion]);
-                
-                const carteraVencerInversion = datosMultiplePeriodos.map(datos => datos.inversion.cartera_vencer);
-                excelData.push(['CARTERA POR VENCER', ...carteraVencerInversion]);
-                
-                const carteraRiesgoInversion = datosMultiplePeriodos.map(datos => datos.inversion.cartera_riesgo);
-                excelData.push(['TOTAL CARTERA EN RIESGO', ...carteraRiesgoInversion]);
-                
-                const carteraNDIInversion = datosMultiplePeriodos.map(datos => datos.inversion.cartera_ndi);
-                excelData.push(['CARTERA QUE NO DEVENGA INTERES', ...carteraNDIInversion]);
-                
-                const carteraVencidaInversion = datosMultiplePeriodos.map(datos => datos.inversion.cartera_vencida);
-                excelData.push(['CARTERA VENCIDA', ...carteraVencidaInversion]);
-                
-                excelData.push([]); // Línea vacía
-                
-                // Cobertura total
-                const coberturaTotalData = datosMultiplePeriodos.map(datos => {
-                    const cobertura = ((datos.productivo.total_provisiones + datos.productivo.provision_generica + 
-                                     datos.inversion.total_provisiones + datos.inversion.provision_generica) / 
-                                    (datos.productivo.cartera_riesgo + datos.inversion.cartera_riesgo)) * 100;
-                    return cobertura.toFixed(2);
-                });
-                excelData.push(['COBERTURA TOTAL CARTERA', ...coberturaTotalData]);
-                
-                excelData.push([]); // Línea vacía
-                
-                // Calidad de cartera (2.3.3.3)
-                excelData.push(['CALIDAD DE CARTERA POR SEGMENTOS:', ...Array(fechasParaExportar.length).fill('')]);
-                excelData.push(['CARTERA PRODUCTIVO:', ...Array(fechasParaExportar.length).fill('')]);
-                
-                const pctVencerProductivo = datosMultiplePeriodos.map(datos => ((datos.productivo.cartera_vencer / datos.productivo.total_credito) * 100).toFixed(2));
-                excelData.push(['PORCENTAJE DE CARTERA POR VENCER', ...pctVencerProductivo]);
-                
-                const pctRiesgoProductivo = datosMultiplePeriodos.map(datos => ((datos.productivo.cartera_riesgo / datos.productivo.total_credito) * 100).toFixed(2));
-                excelData.push(['PORCENTAJE DE CARTERA EN RIESGO', ...pctRiesgoProductivo]);
-                
-                const pctNDIProductivo = datosMultiplePeriodos.map(datos => ((datos.productivo.cartera_ndi / datos.productivo.total_credito) * 100).toFixed(2));
-                excelData.push(['PORCENTAJE DE CARTERA QUE NO DEVENGA INTERES', ...pctNDIProductivo]);
-                
-                const pctVencidaProductivo = datosMultiplePeriodos.map(datos => ((datos.productivo.cartera_vencida / datos.productivo.total_credito) * 100).toFixed(2));
-                excelData.push(['PORCENTAJE DE CARTERA VENCIDA', ...pctVencidaProductivo]);
-                
-                excelData.push(['CARTERA INVERSIÓN PÚBLICA:', ...Array(fechasParaExportar.length).fill('')]);
-                
-                const pctVencerInversion = datosMultiplePeriodos.map(datos => ((datos.inversion.cartera_vencer / datos.inversion.total_credito) * 100).toFixed(2));
-                excelData.push(['PORCENTAJE DE CARTERA POR VENCER', ...pctVencerInversion]);
-                
-                const pctRiesgoInversion = datosMultiplePeriodos.map(datos => ((datos.inversion.cartera_riesgo / datos.inversion.total_credito) * 100).toFixed(2));
-                excelData.push(['PORCENTAJE DE CARTERA EN RIESGO', ...pctRiesgoInversion]);
-                
-                const pctNDIInversion = datosMultiplePeriodos.map(datos => ((datos.inversion.cartera_ndi / datos.inversion.total_credito) * 100).toFixed(2));
-                excelData.push(['PORCENTAJE DE CARTERA QUE NO DEVENGA INTERES', ...pctNDIInversion]);
-                
-                const pctVencidaInversion = datosMultiplePeriodos.map(datos => ((datos.inversion.cartera_vencida / datos.inversion.total_credito) * 100).toFixed(2));
-                excelData.push(['PORCENTAJE DE CARTERA VENCIDA', ...pctVencidaInversion]);
-                
-                // Crear workbook de Excel usando método compatible con navegador
-                const wb = XLSX.utils.book_new();
-                const ws = XLSX.utils.aoa_to_sheet(excelData);
-                
-                // Aplicar anchos de columna
-                const colWidths = [{ wch: 50 }, ...fechasParaExportar.map(() => ({ wch: 18 }))];
-                ws['!cols'] = colWidths;
-                
-                // Agregar hoja al workbook
-                XLSX.utils.book_append_sheet(wb, ws, 'Indicadores BDE');
-                
-                // Generar nombre de archivo
-                const fechaArchivo = fechaSeleccionada.replace(/\//g, '_');
-                const filename = `Indicadores_BDE_${tipoTexto}_${fechaArchivo}_Ultimos4Periodos.xlsx`;
-                
-                // Generar archivo Excel binario
-                const excelBuffer = XLSX.write(wb, { 
-                    bookType: 'xlsx', 
-                    type: 'array',
-                    compression: true
-                });
-                
-                // Crear blob y descargar usando método compatible
-                const blob = new Blob([excelBuffer], { 
-                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                });
-                
-                // Crear enlace de descarga
-                const url = window.URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = filename;
-                link.style.display = 'none';
-                
-                // Agregar al DOM, hacer clic y remover
-                document.body.appendChild(link);
-                link.click();
-                
-                // Limpiar
-                setTimeout(() => {
-                    document.body.removeChild(link);
-                    window.URL.revokeObjectURL(url);
-                }, 100);
-                
-                console.log('✅ Archivo Excel generado:', filename);
-                showNotification(`✅ Archivo Excel descargado: ${filename}`, 'success');
-                
-            } catch (error) {
-                console.error('Error en exportación:', error);
-                showNotification('❌ Error al exportar a Excel: ' + error.message, 'error');
-            }
-        }
-
-        // Utility functions
-        function showLoading(show) {
-            document.getElementById('loading').classList.toggle('show', show);
-        }
-
-        function showNotification(message, type) {
-            // Create notification element
-            const notification = document.createElement('div');
-            notification.className = `status-box status-${type}`;
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                z-index: 1000;
-                min-width: 300px;
-                max-width: 500px;
-                animation: slideIn 0.3s ease;
-            `;
-            notification.innerHTML = `<p>${message}</p>`;
-            
-            // Add animation styles
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes slideIn {
-                    from { transform: translateX(100%); opacity: 0; }
-                    to { transform: translateX(0); opacity: 1; }
-                }
-                @keyframes slideOut {
-                    from { transform: translateX(0); opacity: 1; }
-                    to { transform: translateX(100%); opacity: 0; }
-                }
-            `;
-            document.head.appendChild(style);
-            
-            document.body.appendChild(notification);
-            
-            // Auto-remove after 4 seconds
-            setTimeout(() => {
-                notification.style.animation = 'slideOut 0.3s ease';
-                setTimeout(() => {
-                    if (notification.parentNode) {
-                        notification.parentNode.removeChild(notification);
-                    }
-                }, 300);
-            }, 4000);
-        }
+        // Resto de funciones (exportarExcel, showLoading, showNotification, etc.)
+        // ... (mantener todas estas funciones igual)
 
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
