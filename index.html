@@ -804,89 +804,221 @@
             }).format(value);
         }
 
-        // Exportar a Excel
+        // Exportar a Excel con formato profesional
         function exportarExcel() {
             if (!processingData) {
                 alert('No hay datos para exportar');
                 return;
             }
 
-            const wb = XLSX.utils.book_new();
             const fechas = Object.keys(processingData);
-
-            // Crear hoja integrada
-            const wsData = [];
             
-            // Agregar sección de coberturas
-            wsData.push(['📊 COBERTURAS']);
-            wsData.push(['Concepto', ...fechas]);
-            wsData.push(['COBERTURA CARTERA PRODUCTIVO (%)', ...fechas.map(f => processingData[f].coberturas.COBERTURA_CARTERA_PRODUCTIVO)]);
-            wsData.push(['COBERTURA CARTERA INVERSIÓN PÚBLICA (%)', ...fechas.map(f => processingData[f].coberturas.COBERTURA_CARTERA_INVERSIÓN_PÚBLICA)]);
-            wsData.push(['COBERTURA TOTAL CARTERA (%)', ...fechas.map(f => processingData[f].coberturas.COBERTURA_TOTAL_CARTERA)]);
-            wsData.push([]);
+            // Crear workbook con opciones de estilo
+            const wb = XLSX.utils.book_new();
+            wb.Props = {
+                Title: "Reporte Consolidado Trimestral - Banco de Desarrollo del Ecuador",
+                Subject: "Análisis de Cartera",
+                Author: "Sistema BDD",
+                CreatedDate: new Date()
+            };
 
-            // Agregar sección de cartera productivo
-            wsData.push(['💰 CARTERA PRODUCTIVO']);
-            wsData.push(['Concepto', ...fechas]);
-            wsData.push(['Total Cartera de Crédito Productivo', ...fechas.map(f => processingData[f].cartera_productivo.TOTAL_C_CREDITO_PRODUCTIVO)]);
-            wsData.push(['Total Provisiones Específicas C. Productivo', ...fechas.map(f => processingData[f].cartera_productivo.TOTAL_PROVISIONES_ESPECIFICAS_C_PRODUCTIVO)]);
-            wsData.push(['Total Provisión Genérica C. Productivo', ...fechas.map(f => processingData[f].cartera_productivo.TOTAL_PROVISIÓN_GENÉRICA_C_PRODUCTIVO)]);
-            wsData.push(['Cartera por Vencer C. Productivo', ...fechas.map(f => processingData[f].cartera_productivo.CARTERA_X_VENCER_C_PRODUCTIVO)]);
-            wsData.push(['Total Cartera Riesgo C. Productivo', ...fechas.map(f => processingData[f].cartera_productivo.TOTAL_CARTERA_RIESGO_C_PRODUCTIVO)]);
-            wsData.push(['Cartera NDI C. Productivo', ...fechas.map(f => processingData[f].cartera_productivo.CARTERA_NDI_C_PRODUCTIVO)]);
-            wsData.push(['Cartera Vencida C. Productivo', ...fechas.map(f => processingData[f].cartera_productivo.CARTERA_VENCIDA_C_PRODUCTIVO)]);
-            wsData.push([]);
+            // Crear datos estructurados para cada sección
+            const secciones = [
+                {
+                    titulo: '📊 COBERTURAS',
+                    datos: [
+                        ['COBERTURA CARTERA PRODUCTIVO (%)', ...fechas.map(f => processingData[f].coberturas.COBERTURA_CARTERA_PRODUCTIVO)],
+                        ['COBERTURA CARTERA INVERSIÓN PÚBLICA (%)', ...fechas.map(f => processingData[f].coberturas.COBERTURA_CARTERA_INVERSIÓN_PÚBLICA)],
+                        ['COBERTURA TOTAL CARTERA (%)', ...fechas.map(f => processingData[f].coberturas.COBERTURA_TOTAL_CARTERA)]
+                    ],
+                    bgColor: 'FCF3CF'
+                },
+                {
+                    titulo: '💰 CARTERA PRODUCTIVO',
+                    datos: [
+                        ['Total Cartera de Crédito Productivo', ...fechas.map(f => processingData[f].cartera_productivo.TOTAL_C_CREDITO_PRODUCTIVO)],
+                        ['Total Provisiones Específicas C. Productivo', ...fechas.map(f => processingData[f].cartera_productivo.TOTAL_PROVISIONES_ESPECIFICAS_C_PRODUCTIVO)],
+                        ['Total Provisión Genérica C. Productivo', ...fechas.map(f => processingData[f].cartera_productivo.TOTAL_PROVISIÓN_GENÉRICA_C_PRODUCTIVO)],
+                        ['Cartera por Vencer C. Productivo', ...fechas.map(f => processingData[f].cartera_productivo.CARTERA_X_VENCER_C_PRODUCTIVO)],
+                        ['Total Cartera Riesgo C. Productivo', ...fechas.map(f => processingData[f].cartera_productivo.TOTAL_CARTERA_RIESGO_C_PRODUCTIVO)],
+                        ['Cartera NDI C. Productivo', ...fechas.map(f => processingData[f].cartera_productivo.CARTERA_NDI_C_PRODUCTIVO)],
+                        ['Cartera Vencida C. Productivo', ...fechas.map(f => processingData[f].cartera_productivo.CARTERA_VENCIDA_C_PRODUCTIVO)]
+                    ],
+                    bgColor: 'EBF5FB'
+                },
+                {
+                    titulo: '🏛️ CARTERA INVERSIÓN PÚBLICA',
+                    datos: [
+                        ['Total Cartera de Crédito Inversión Publica', ...fechas.map(f => processingData[f].cartera_inv_publica.TOTAL_C_DE_CREDITO_C_IN_PUBLICO)],
+                        ['Total Provisiones Específicas Inversión Publica', ...fechas.map(f => processingData[f].cartera_inv_publica.TOTAL_PROVISIONES_ESPECIFICAS_C_IN_PUBLICO)],
+                        ['Total Provisión Genérica Inversión Publica', ...fechas.map(f => processingData[f].cartera_inv_publica.TOTAL_PROVISIÓN_GENÉRICA_CREDITO_C_IN_PUBLICO)],
+                        ['Cartera por Vencer Inversión Publica', ...fechas.map(f => processingData[f].cartera_inv_publica.CARTERA_X_VENCER_C_IN_PUBLICO)],
+                        ['Total Cartera Riesgo Inversión Publica', ...fechas.map(f => processingData[f].cartera_inv_publica.TOTAL_CARTERA_RIESGO_C_IN_PUBLICO)],
+                        ['Cartera NDI Inversión Publica', ...fechas.map(f => processingData[f].cartera_inv_publica.CARTERA_NDI_IN_PUBLICO)],
+                        ['Cartera Vencida Inversión Publica', ...fechas.map(f => processingData[f].cartera_inv_publica.CARTERA_VENCIDA_IN_PUBLICO)]
+                    ],
+                    bgColor: 'E8F8F5'
+                },
+                {
+                    titulo: '📈 INDICADORES PRODUCTIVO',
+                    datos: [
+                        ['CARTERA PRODUCTIVO', ...fechas.map(f => processingData[f].indicadores_productivo.CARTERA_PRODUCTIVO)],
+                        ['PORCENTAJE DE CARTERA POR VENCER', ...fechas.map(f => processingData[f].indicadores_productivo.PORCENTAJE_CARTERA_X_VENCER)],
+                        ['PORCENTAJE DE CARTERA EN RIESGO', ...fechas.map(f => processingData[f].indicadores_productivo.PORCENTAJE_CARTERA_RIESGO)],
+                        ['PORCENTAJE DE CARTERA QUE NO DEVENGA INTERES', ...fechas.map(f => processingData[f].indicadores_productivo.PORCENTAJE_CARTERA_NDI)],
+                        ['PORCENTAJE DE CARTERA VENCIDA', ...fechas.map(f => processingData[f].indicadores_productivo.PORCENTAJE_CARTERA_VENCIDA)]
+                    ],
+                    bgColor: 'FEF9E7'
+                },
+                {
+                    titulo: '📉 INDICADORES INVERSIÓN PÚBLICA',
+                    datos: [
+                        ['CARTERA INVERSIÓN PÚBLICA', ...fechas.map(f => processingData[f].indicadores_inv_publica.CARTERA_INVERSIÓN_PÚBLICA)],
+                        ['PORCENTAJE DE CARTERA POR VENCER', ...fechas.map(f => processingData[f].indicadores_inv_publica.PORCENTAJE_CARTERA_X_VENCER)],
+                        ['PORCENTAJE DE CARTERA EN RIESGO', ...fechas.map(f => processingData[f].indicadores_inv_publica.PORCENTAJE_CARTERA_RIESGO)],
+                        ['PORCENTA DE CARTERA QUE NO DEVENGA INTERES', ...fechas.map(f => processingData[f].indicadores_inv_publica.PORCENTAJE_CARTERA_NDI)],
+                        ['PORCENTAJE DE CARTERA VENCIDA', ...fechas.map(f => processingData[f].indicadores_inv_publica.PORCENTAJE_CARTERA_VENCIDA)]
+                    ],
+                    bgColor: 'F4ECF7'
+                },
+                {
+                    titulo: '💼 PROVISIONES',
+                    datos: [
+                        ['Productivo', ...fechas.map(f => processingData[f].provisiones.Productivo)],
+                        ['Inversión Publica', ...fechas.map(f => processingData[f].provisiones.Inversión_Publica)],
+                        ['Refinanciada', ...fechas.map(f => processingData[f].provisiones.Refinanciada)],
+                        ['Reestructurada', ...fechas.map(f => processingData[f].provisiones.Reestructurada)],
+                        ['Provisión Anticíclica', ...fechas.map(f => processingData[f].provisiones.Provisión_Anticíclica)],
+                        ['Provisiones no reversadas por requerimiento normativo', ...fechas.map(f => processingData[f].provisiones.Provisiones_no_reversadas)],
+                        ['Provisión genérica voluntaria', ...fechas.map(f => processingData[f].provisiones.Provisión_genérica_voluntaria)],
+                        ['Provisiones para créditos incobrables', ...fechas.map(f => processingData[f].provisiones.Provisiones_para_créditos_incobrables)]
+                    ],
+                    bgColor: 'F8F9FA'
+                }
+            ];
 
-            // Agregar sección de cartera inversión pública
-            wsData.push(['🏛️ CARTERA INVERSIÓN PÚBLICA']);
-            wsData.push(['Concepto', ...fechas]);
-            wsData.push(['Total Cartera de Crédito Inversión Publica', ...fechas.map(f => processingData[f].cartera_inv_publica.TOTAL_C_DE_CREDITO_C_IN_PUBLICO)]);
-            wsData.push(['Total Provisiones Específicas Inversión Publica', ...fechas.map(f => processingData[f].cartera_inv_publica.TOTAL_PROVISIONES_ESPECIFICAS_C_IN_PUBLICO)]);
-            wsData.push(['Total Provisión Genérica Inversión Publica', ...fechas.map(f => processingData[f].cartera_inv_publica.TOTAL_PROVISIÓN_GENÉRICA_CREDITO_C_IN_PUBLICO)]);
-            wsData.push(['Cartera por Vencer Inversión Publica', ...fechas.map(f => processingData[f].cartera_inv_publica.CARTERA_X_VENCER_C_IN_PUBLICO)]);
-            wsData.push(['Total Cartera Riesgo Inversión Publica', ...fechas.map(f => processingData[f].cartera_inv_publica.TOTAL_CARTERA_RIESGO_C_IN_PUBLICO)]);
-            wsData.push(['Cartera NDI Inversión Publica', ...fechas.map(f => processingData[f].cartera_inv_publica.CARTERA_NDI_IN_PUBLICO)]);
-            wsData.push(['Cartera Vencida Inversión Publica', ...fechas.map(f => processingData[f].cartera_inv_publica.CARTERA_VENCIDA_IN_PUBLICO)]);
-            wsData.push([]);
+            // Construir hoja con formato
+            const wsData = [];
+            const merges = [];
+            const cellStyles = {};
+            let currentRow = 0;
 
-            // Agregar sección de indicadores productivo
-            wsData.push(['📈 INDICADORES PRODUCTIVO']);
-            wsData.push(['Concepto', ...fechas]);
-            wsData.push(['CARTERA PRODUCTIVO', ...fechas.map(f => processingData[f].indicadores_productivo.CARTERA_PRODUCTIVO)]);
-            wsData.push(['PORCENTAJE DE CARTERA POR VENCER', ...fechas.map(f => processingData[f].indicadores_productivo.PORCENTAJE_CARTERA_X_VENCER)]);
-            wsData.push(['PORCENTAJE DE CARTERA EN RIESGO', ...fechas.map(f => processingData[f].indicadores_productivo.PORCENTAJE_CARTERA_RIESGO)]);
-            wsData.push(['PORCENTAJE DE CARTERA QUE NO DEVENGA INTERES', ...fechas.map(f => processingData[f].indicadores_productivo.PORCENTAJE_CARTERA_NDI)]);
-            wsData.push(['PORCENTAJE DE CARTERA VENCIDA', ...fechas.map(f => processingData[f].indicadores_productivo.PORCENTAJE_CARTERA_VENCIDA)]);
-            wsData.push([]);
+            secciones.forEach((seccion, seccionIndex) => {
+                // Agregar título de sección
+                wsData.push([seccion.titulo]);
+                
+                // Estilo para título de sección
+                cellStyles[XLSX.utils.encode_cell({r: currentRow, c: 0})] = {
+                    font: { bold: true, color: { rgb: "FFFFFF" }, size: 13 },
+                    fill: { fgColor: { rgb: "34495E" } },
+                    alignment: { horizontal: "center", vertical: "center" }
+                };
+                
+                // Merge título de sección
+                merges.push({
+                    s: { r: currentRow, c: 0 },
+                    e: { r: currentRow, c: fechas.length }
+                });
+                currentRow++;
 
-            // Agregar sección de indicadores inversión pública
-            wsData.push(['📉 INDICADORES INVERSIÓN PÚBLICA']);
-            wsData.push(['Concepto', ...fechas]);
-            wsData.push(['CARTERA INVERSIÓN PÚBLICA', ...fechas.map(f => processingData[f].indicadores_inv_publica.CARTERA_INVERSIÓN_PÚBLICA)]);
-            wsData.push(['PORCENTAJE DE CARTERA POR VENCER', ...fechas.map(f => processingData[f].indicadores_inv_publica.PORCENTAJE_CARTERA_X_VENCER)]);
-            wsData.push(['PORCENTAJE DE CARTERA EN RIESGO', ...fechas.map(f => processingData[f].indicadores_inv_publica.PORCENTAJE_CARTERA_RIESGO)]);
-            wsData.push(['PORCENTA DE CARTERA QUE NO DEVENGA INTERES', ...fechas.map(f => processingData[f].indicadores_inv_publica.PORCENTAJE_CARTERA_NDI)]);
-            wsData.push(['PORCENTAJE DE CARTERA VENCIDA', ...fechas.map(f => processingData[f].indicadores_inv_publica.PORCENTAJE_CARTERA_VENCIDA)]);
-            wsData.push([]);
+                // Agregar encabezados
+                wsData.push(['Concepto', ...fechas]);
+                
+                // Estilos para encabezados
+                for (let col = 0; col <= fechas.length; col++) {
+                    cellStyles[XLSX.utils.encode_cell({r: currentRow, c: col})] = {
+                        font: { bold: true, color: { rgb: "FFFFFF" }, size: 11 },
+                        fill: { fgColor: { rgb: "2C3E50" } },
+                        alignment: { horizontal: "center", vertical: "center" }
+                    };
+                }
+                currentRow++;
 
-            // Agregar sección de provisiones
-            wsData.push(['💼 PROVISIONES']);
-            wsData.push(['Concepto', ...fechas]);
-            wsData.push(['Productivo', ...fechas.map(f => processingData[f].provisiones.Productivo)]);
-            wsData.push(['Inversión Publica', ...fechas.map(f => processingData[f].provisiones.Inversión_Publica)]);
-            wsData.push(['Refinanciada', ...fechas.map(f => processingData[f].provisiones.Refinanciada)]);
-            wsData.push(['Reestructurada', ...fechas.map(f => processingData[f].provisiones.Reestructurada)]);
-            wsData.push(['Provisión Anticíclica', ...fechas.map(f => processingData[f].provisiones.Provisión_Anticíclica)]);
-            wsData.push(['Provisiones no reversadas por requerimiento normativo', ...fechas.map(f => processingData[f].provisiones.Provisiones_no_reversadas)]);
-            wsData.push(['Provisión genérica voluntaria', ...fechas.map(f => processingData[f].provisiones.Provisión_genérica_voluntaria)]);
-            wsData.push(['Provisiones para créditos incobrables', ...fechas.map(f => processingData[f].provisiones.Provisiones_para_créditos_incobrables)]);
+                // Agregar datos
+                seccion.datos.forEach(fila => {
+                    wsData.push(fila);
+                    
+                    // Estilo para conceptos (primera columna)
+                    cellStyles[XLSX.utils.encode_cell({r: currentRow, c: 0})] = {
+                        font: { bold: true, color: { rgb: "333333" } },
+                        alignment: { horizontal: "left" }
+                    };
+                    
+                    // Estilos para datos numéricos
+                    for (let col = 1; col <= fechas.length; col++) {
+                        cellStyles[XLSX.utils.encode_cell({r: currentRow, c: col})] = {
+                            fill: { fgColor: { rgb: seccion.bgColor } },
+                            alignment: { horizontal: "right" },
+                            numFmt: "#,##0.00"
+                        };
+                    }
+                    currentRow++;
+                });
 
+                // Agregar fila vacía entre secciones
+                if (seccionIndex < secciones.length - 1) {
+                    wsData.push([]);
+                    currentRow++;
+                }
+            });
+
+            // Crear hoja de trabajo
             const ws = XLSX.utils.aoa_to_sheet(wsData);
-            XLSX.utils.book_append_sheet(wb, ws, 'Reporte Consolidado');
+            
+            // Aplicar merges
+            if (!ws['!merges']) ws['!merges'] = [];
+            ws['!merges'] = merges;
+
+            // Configurar ancho de columnas
+            const colWidths = [{ wch: 45 }]; // Primera columna ancha para conceptos
+            for (let i = 0; i < fechas.length; i++) {
+                colWidths.push({ wch: 18 }); // Columnas de fechas
+            }
+            ws['!cols'] = colWidths;
+
+            // Aplicar estilos (esto es una aproximación, XLSX.js tiene limitaciones de estilo)
+            Object.keys(cellStyles).forEach(cellRef => {
+                if (!ws[cellRef]) return;
+                if (!ws[cellRef].s) ws[cellRef].s = {};
+                Object.assign(ws[cellRef].s, cellStyles[cellRef]);
+            });
+
+            // Agregar hoja al workbook
+            XLSX.utils.book_append_sheet(wb, ws, 'Reporte Consolidado Trimestral');
+
+            // Crear hoja de resumen adicional
+            const resumenData = [
+                ['REPORTE CONSOLIDADO TRIMESTRAL'],
+                ['Banco de Desarrollo del Ecuador'],
+                [''],
+                ['Fecha de generación:', new Date().toLocaleDateString('es-EC')],
+                ['Períodos analizados:', `${fechas[0]} a ${fechas[fechas.length - 1]}`],
+                ['Total de trimestres:', fechas.length],
+                [''],
+                ['CONTENIDO DEL REPORTE:'],
+                ['• Coberturas de Cartera'],
+                ['• Cartera Productivo'],
+                ['• Cartera Inversión Pública'],
+                ['• Indicadores Productivo'],
+                ['• Indicadores Inversión Pública'],
+                ['• Provisiones'],
+                [''],
+                ['NOTAS:'],
+                ['• Los valores monetarios están expresados en dólares estadounidenses'],
+                ['• Los porcentajes se muestran con 2 decimales'],
+                ['• Los datos corresponden a fechas trimestrales efectivamente procesadas']
+            ];
+
+            const wsResumen = XLSX.utils.aoa_to_sheet(resumenData);
+            
+            // Configurar ancho de columnas para resumen
+            wsResumen['!cols'] = [{ wch: 50 }, { wch: 30 }];
+            
+            XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen');
 
             // Descargar archivo
             const timestamp = new Date().toISOString().slice(0, 10);
-            XLSX.writeFile(wb, `Reporte_BDD_Trimestral_${timestamp}.xlsx`);
+            XLSX.writeFile(wb, `Reporte_Consolidado_Trimestral_BDD_${timestamp}.xlsx`);
         }
 
         // Mostrar error
