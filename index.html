@@ -6,6 +6,7 @@
     <title>Analizador BDD - Banco de Desarrollo del Ecuador</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -804,8 +805,8 @@
             }).format(value);
         }
 
-        // Exportar a Excel con formato profesional
-        function exportarExcel() {
+        // Exportar a Excel con formato profesional usando ExcelJS
+        async function exportarExcel() {
             if (!processingData) {
                 alert('No hay datos para exportar');
                 return;
@@ -813,16 +814,27 @@
 
             const fechas = Object.keys(processingData);
             
-            // Crear workbook con opciones de estilo
-            const wb = XLSX.utils.book_new();
-            wb.Props = {
-                Title: "Reporte Consolidado Trimestral - Banco de Desarrollo del Ecuador",
-                Subject: "Análisis de Cartera",
-                Author: "Sistema BDD",
-                CreatedDate: new Date()
-            };
+            // Crear workbook con ExcelJS
+            const workbook = new ExcelJS.Workbook();
+            workbook.creator = 'Sistema BDD';
+            workbook.lastModifiedBy = 'Sistema BDD';
+            workbook.created = new Date();
+            workbook.modified = new Date();
+            workbook.lastPrinted = new Date();
 
-            // Crear datos estructurados para cada sección
+            // Crear hoja principal
+            const worksheet = workbook.addWorksheet('Reporte Consolidado Trimestral');
+
+            // Configurar columnas
+            const columns = [
+                { width: 45 }, // Columna de conceptos
+                ...fechas.map(() => ({ width: 18 })) // Columnas de fechas
+            ];
+            worksheet.columns = columns;
+
+            let currentRow = 1;
+
+            // Definir secciones con sus datos y colores
             const secciones = [
                 {
                     titulo: '📊 COBERTURAS',
@@ -897,96 +909,110 @@
                 }
             ];
 
-            // Construir hoja con formato
-            const wsData = [];
-            const merges = [];
-            const cellStyles = {};
-            let currentRow = 0;
-
+            // Agregar cada sección
             secciones.forEach((seccion, seccionIndex) => {
                 // Agregar título de sección
-                wsData.push([seccion.titulo]);
+                const tituloRow = worksheet.getRow(currentRow);
+                tituloRow.getCell(1).value = seccion.titulo;
                 
-                // Estilo para título de sección
-                cellStyles[XLSX.utils.encode_cell({r: currentRow, c: 0})] = {
-                    font: { bold: true, color: { rgb: "FFFFFF" }, size: 13 },
-                    fill: { fgColor: { rgb: "34495E" } },
-                    alignment: { horizontal: "center", vertical: "center" }
+                // Fusionar celdas del título
+                worksheet.mergeCells(currentRow, 1, currentRow, fechas.length + 1);
+                
+                // Estilo del título
+                tituloRow.getCell(1).font = { 
+                    bold: true, 
+                    color: { argb: 'FFFFFFFF' }, 
+                    size: 13 
                 };
-                
-                // Merge título de sección
-                merges.push({
-                    s: { r: currentRow, c: 0 },
-                    e: { r: currentRow, c: fechas.length }
-                });
+                tituloRow.getCell(1).fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FF34495E' }
+                };
+                tituloRow.getCell(1).alignment = { 
+                    horizontal: 'center', 
+                    vertical: 'middle' 
+                };
+                tituloRow.height = 25;
                 currentRow++;
 
                 // Agregar encabezados
-                wsData.push(['Concepto', ...fechas]);
-                
-                // Estilos para encabezados
-                for (let col = 0; col <= fechas.length; col++) {
-                    cellStyles[XLSX.utils.encode_cell({r: currentRow, c: col})] = {
-                        font: { bold: true, color: { rgb: "FFFFFF" }, size: 11 },
-                        fill: { fgColor: { rgb: "2C3E50" } },
-                        alignment: { horizontal: "center", vertical: "center" }
+                const headerRow = worksheet.getRow(currentRow);
+                headerRow.getCell(1).value = 'Concepto';
+                fechas.forEach((fecha, index) => {
+                    headerRow.getCell(index + 2).value = fecha;
+                });
+
+                // Estilo de encabezados
+                for (let col = 1; col <= fechas.length + 1; col++) {
+                    const cell = headerRow.getCell(col);
+                    cell.font = { 
+                        bold: true, 
+                        color: { argb: 'FFFFFFFF' }, 
+                        size: 11 
+                    };
+                    cell.fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: 'FF2C3E50' }
+                    };
+                    cell.alignment = { 
+                        horizontal: 'center', 
+                        vertical: 'middle' 
                     };
                 }
+                headerRow.height = 20;
                 currentRow++;
 
                 // Agregar datos
                 seccion.datos.forEach(fila => {
-                    wsData.push(fila);
+                    const dataRow = worksheet.getRow(currentRow);
                     
-                    // Estilo para conceptos (primera columna)
-                    cellStyles[XLSX.utils.encode_cell({r: currentRow, c: 0})] = {
-                        font: { bold: true, color: { rgb: "333333" } },
-                        alignment: { horizontal: "left" }
+                    // Agregar concepto
+                    dataRow.getCell(1).value = fila[0];
+                    dataRow.getCell(1).font = { 
+                        bold: true, 
+                        color: { argb: 'FF333333' } 
                     };
-                    
-                    // Estilos para datos numéricos
-                    for (let col = 1; col <= fechas.length; col++) {
-                        cellStyles[XLSX.utils.encode_cell({r: currentRow, c: col})] = {
-                            fill: { fgColor: { rgb: seccion.bgColor } },
-                            alignment: { horizontal: "right" },
-                            numFmt: "#,##0.00"
+                    dataRow.getCell(1).alignment = { 
+                        horizontal: 'left' 
+                    };
+
+                    // Agregar valores numéricos
+                    fila.slice(1).forEach((valor, index) => {
+                        const cell = dataRow.getCell(index + 2);
+                        cell.value = parseFloat(valor);
+                        cell.numFmt = '#,##0.00';
+                        cell.fill = {
+                            type: 'pattern',
+                            pattern: 'solid',
+                            fgColor: { argb: 'FF' + seccion.bgColor }
                         };
-                    }
+                        cell.alignment = { 
+                            horizontal: 'right' 
+                        };
+                    });
+
+                    dataRow.height = 18;
                     currentRow++;
                 });
 
-                // Agregar fila vacía entre secciones
+                // Agregar espacio entre secciones
                 if (seccionIndex < secciones.length - 1) {
-                    wsData.push([]);
                     currentRow++;
                 }
             });
 
-            // Crear hoja de trabajo
-            const ws = XLSX.utils.aoa_to_sheet(wsData);
-            
-            // Aplicar merges
-            if (!ws['!merges']) ws['!merges'] = [];
-            ws['!merges'] = merges;
+            // Agregar filtros
+            worksheet.autoFilter = {
+                from: { row: 2, column: 1 },
+                to: { row: 2, column: fechas.length + 1 }
+            };
 
-            // Configurar ancho de columnas
-            const colWidths = [{ wch: 45 }]; // Primera columna ancha para conceptos
-            for (let i = 0; i < fechas.length; i++) {
-                colWidths.push({ wch: 18 }); // Columnas de fechas
-            }
-            ws['!cols'] = colWidths;
+            // Crear hoja de resumen
+            const resumenSheet = workbook.addWorksheet('Resumen');
+            resumenSheet.columns = [{ width: 50 }, { width: 30 }];
 
-            // Aplicar estilos (esto es una aproximación, XLSX.js tiene limitaciones de estilo)
-            Object.keys(cellStyles).forEach(cellRef => {
-                if (!ws[cellRef]) return;
-                if (!ws[cellRef].s) ws[cellRef].s = {};
-                Object.assign(ws[cellRef].s, cellStyles[cellRef]);
-            });
-
-            // Agregar hoja al workbook
-            XLSX.utils.book_append_sheet(wb, ws, 'Reporte Consolidado Trimestral');
-
-            // Crear hoja de resumen adicional
             const resumenData = [
                 ['REPORTE CONSOLIDADO TRIMESTRAL'],
                 ['Banco de Desarrollo del Ecuador'],
@@ -1009,16 +1035,47 @@
                 ['• Los datos corresponden a fechas trimestrales efectivamente procesadas']
             ];
 
-            const wsResumen = XLSX.utils.aoa_to_sheet(resumenData);
-            
-            // Configurar ancho de columnas para resumen
-            wsResumen['!cols'] = [{ wch: 50 }, { wch: 30 }];
-            
-            XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen');
+            resumenData.forEach((fila, index) => {
+                const row = resumenSheet.getRow(index + 1);
+                if (Array.isArray(fila)) {
+                    row.getCell(1).value = fila[0];
+                    row.getCell(2).value = fila[1];
+                } else {
+                    row.getCell(1).value = fila;
+                }
 
-            // Descargar archivo
-            const timestamp = new Date().toISOString().slice(0, 10);
-            XLSX.writeFile(wb, `Reporte_Consolidado_Trimestral_BDD_${timestamp}.xlsx`);
+                // Estilo especial para títulos
+                if (index === 0 || index === 1) {
+                    row.getCell(1).font = { bold: true, size: 14 };
+                    row.getCell(1).fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: 'FFE8F4F8' }
+                    };
+                }
+            });
+
+            // Exportar archivo
+            try {
+                const buffer = await workbook.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { 
+                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+                });
+                
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                
+                const timestamp = new Date().toISOString().slice(0, 10);
+                link.download = `Reporte_Consolidado_Trimestral_BDD_${timestamp}.xlsx`;
+                
+                link.click();
+                window.URL.revokeObjectURL(url);
+                
+            } catch (error) {
+                console.error('Error al exportar:', error);
+                alert('Error al generar el archivo Excel. Intenta de nuevo.');
+            }
         }
 
         // Mostrar error
