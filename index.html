@@ -277,7 +277,11 @@
                 </div>
                 
                 <button id="loadDefault" class="process-btn">
-                    🔄 Cargar Datos por Defecto
+                    🔄 Cargar Datos Automáticamente
+                </button>
+                
+                <button id="forceUpdate" class="process-btn" style="background: linear-gradient(135deg, #e67e22, #d35400);">
+                    🚀 Forzar Actualización
                 </button>
                 
                 <button id="processBtn" class="process-btn" disabled>
@@ -341,6 +345,191 @@
     <script>
         let processingData = null;
         let fechasTrimestrales = [];
+        let datosGuardados = null;
+        let fechaUltimaActualizacion = null;
+
+        // Detectar archivos BDD disponibles automáticamente
+        async function detectarArchivosDisponibles() {
+            const currentYear = new Date().getFullYear();
+            const archivosAProbrar = [];
+            
+            // Generar lista de archivos posibles (últimos 2 años)
+            for (let year = currentYear; year >= currentYear - 1; year--) {
+                for (let month = 12; month >= 1; month--) {
+                    const monthStr = String(month).padStart(2, '0');
+                    archivosAProbrar.push({
+                        url: `BDD/BANCO DE DESARROLLO DEL ECUADOR B.P. ${year}_${monthStr}.xlsx`,
+                        fecha: new Date(year, month - 1, 1),
+                        nombre: `${year}_${monthStr}`
+                    });
+                }
+            }
+            
+            // Probar archivos en orden descendente (más reciente primero)
+            for (let archivo of archivosAProbrar) {
+                try {
+                    const response = await fetch(archivo.url, { method: 'HEAD' });
+                    if (response.ok) {
+                        console.log(`✅ Archivo encontrado: ${archivo.nombre}`);
+                        return archivo;
+                    }
+                } catch (error) {
+                    // Silenciosamente continuar con el siguiente archivo
+                }
+            }
+            
+            // Fallback al archivo original
+            return {
+                url: 'BDD/BANCO DE DESARROLLO DEL ECUADOR B.P. 2025_06.xlsx',
+                fecha: new Date(2025, 5, 1),
+                nombre: '2025_06'
+            };
+        }
+
+        // Verificar si hay datos guardados localmente
+        function verificarDatosLocales() {
+            try {
+                const datosLocal = localStorage.getItem('bdd_datos_procesados');
+                const fechaLocal = localStorage.getItem('bdd_fecha_actualizacion');
+                
+                if (datosLocal && fechaLocal) {
+                    const fechaGuardada = new Date(fechaLocal);
+                    const ahora = new Date();
+                    const diferenciaDias = (ahora - fechaGuardada) / (1000 * 60 * 60 * 24);
+                    
+                    // Si los datos tienen menos de 7 días, usarlos
+                    if (diferenciaDias < 7) {
+                        console.log('📱 Usando datos guardados localmente');
+                        return {
+                            datos: JSON.parse(datosLocal),
+                            fecha: fechaGuardada
+                        };
+                    }
+                }
+            } catch (error) {
+                console.log('No se pudieron cargar datos locales:', error);
+            }
+            return null;
+        }
+
+        // Guardar datos procesados localmente
+        function guardarDatosLocalmente(datos) {
+            try {
+                localStorage.setItem('bdd_datos_procesados', JSON.stringify(datos));
+                localStorage.setItem('bdd_fecha_actualizacion', new Date().toISOString());
+                console.log('💾 Datos guardados localmente');
+            } catch (error) {
+                console.log('No se pudieron guardar datos localmente:', error);
+            }
+        }
+
+        // Mostrar información del archivo cargado
+        function mostrarInfoArchivo(nombreArchivo, fecha, esLocal = false) {
+            const infoPanel = document.querySelector('.info-panel');
+            const tipoFuente = esLocal ? '📱 Datos locales' : '🌐 Datos del repositorio';
+            const fechaFormateada = fecha.toLocaleDateString('es-EC', { 
+                year: 'numeric', 
+                month: 'long' 
+            });
+            
+            infoPanel.innerHTML = `
+                <strong>📋 Instrucciones:</strong>
+                <br>• Sube un archivo Excel actualizado o usa los datos detectados automáticamente
+                <br>• El sistema procesará automáticamente solo las fechas trimestrales que ya han ocurrido
+                <br>• Los cálculos incluyen cartera productiva, inversión pública, coberturas y provisiones
+                <br>• Las fechas futuras no se mostrarán para evitar confusión
+                <br><br>
+                <strong>${tipoFuente}:</strong> ${nombreArchivo} (${fechaFormateada})
+                <br><strong>💡 Estado:</strong> ${esLocal ? 'Datos en caché - Actualizados automáticamente cada 7 días' : 'Datos más recientes del repositorio'}
+            `;
+        }
+
+        // Cargar datos por defecto con detección automática
+        async function cargarDatosPorDefecto() {
+            try {
+                // Primero verificar datos locales
+                const datosLocales = verificarDatosLocales();
+                if (datosLocales) {
+                    processingData = datosLocales.datos;
+                    fechaUltimaActualizacion = datosLocales.fecha;
+                    mostrarResultados(processingData);
+                    mostrarInfoArchivo('Datos guardados', datosLocales.fecha, true);
+                    return;
+                }
+
+                // Si no hay datos locales válidos, buscar en repositorio
+                console.log('🔍 Detectando archivo más reciente...');
+                const archivoDetectado = await detectarArchivosDisponibles();
+                
+                console.log(`📥 Cargando: ${archivoDetectado.nombre}`);
+                const response = await fetch(archivoDetectado.url);
+                
+                if (!response.ok) {
+                    throw new Error(`No se pudo cargar el archivo: ${archivoDetectado.nombre}`);
+                }
+                
+                const arrayBuffer = await response.arrayBuffer();
+                const workbook = XLSX.read(arrayBuffer);
+                const resultados = procesarWorkbook(workbook);
+                
+                // Guardar datos localmente para próximas visitas
+                guardarDatosLocalmente(resultados);
+                fechaUltimaActualizacion = new Date();
+                
+                mostrarInfoArchivo(archivoDetectado.nombre, archivoDetectado.fecha, false);
+                
+            } catch (error) {
+                mostrarError('Error al cargar datos automáticamente: ' + error.message);
+            }
+        }
+
+        // Forzar actualización desde repositorio
+        async function forzarActualizacion() {
+            try {
+                // Limpiar datos locales
+                localStorage.removeItem('bdd_datos_procesados');
+                localStorage.removeItem('bdd_fecha_actualizacion');
+                
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('results').style.display = 'none';
+                document.getElementById('exportSection').style.display = 'none';
+                
+                // Recargar desde repositorio
+                await cargarDatosPorDefecto();
+                
+            } catch (error) {
+                mostrarError('Error al actualizar datos: ' + error.message);
+            }
+        }
+
+        // Generar vector de fechas desde 2003
+        function generarVectorFechas() {
+            const fechas = [];
+            let year = 2003;
+            let month = 1;
+            
+            // Generar suficientes fechas (hasta 2025 aproximadamente)
+            for (let i = 0; i < 275; i++) {
+                let day;
+                if (month === 2) {
+                    day = ((year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0)) ? 29 : 28;
+                } else if ([4, 6, 9, 11].includes(month)) {
+                    day = 30;
+                } else {
+                    day = 31;
+                }
+                
+                const dateStr = `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
+                fechas.push(dateStr);
+                
+                month++;
+                if (month > 12) {
+                    month = 1;
+                    year++;
+                }
+            }
+            return fechas;
+        }
 
         // Generar fechas trimestrales dinámicamente basándose en datos disponibles
         function generarFechasTrimestralesDisponibles(vectorFechas) {
@@ -374,37 +563,8 @@
             return fechasTrimestrales;
         }
 
-        // Generar vector de fechas desde 2003
-        function generarVectorFechas() {
-            const fechas = [];
-            let year = 2003;
-            let month = 1;
-            
-            // Generar suficientes fechas (hasta 2025 aproximadamente)
-            for (let i = 0; i < 275; i++) {
-                let day;
-                if (month === 2) {
-                    day = ((year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0)) ? 29 : 28;
-                } else if ([4, 6, 9, 11].includes(month)) {
-                    day = 30;
-                } else {
-                    day = 31;
-                }
-                
-                const dateStr = `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
-                fechas.push(dateStr);
-                
-                month++;
-                if (month > 12) {
-                    month = 1;
-                    year++;
-                }
-            }
-            return fechas;
-        }
-
         // Cargar datos por defecto desde GitHub
-        async function cargarDatosPorDefecto() {
+        async function cargarDatosPorDefectoOriginal() {
             try {
                 const response = await fetch('BDD/BANCO DE DESARROLLO DEL ECUADOR B.P. 2025_06.xlsx');
                 if (!response.ok) {
@@ -437,8 +597,11 @@
                 const resultados = procesarDatos(mainData, indicData);
                 mostrarResultados(resultados);
                 
+                return resultados; // Retornar para poder guardar
+                
             } catch (error) {
                 mostrarError('Error al procesar archivo: ' + error.message);
+                return null;
             }
         }
 
