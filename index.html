@@ -447,21 +447,121 @@
         // Cargar datos por defecto con detección automática
         async function cargarDatosPorDefecto() {
             try {
+                // Mostrar carga inicial
+                const loadingDiv = document.getElementById('loading');
+                loadingDiv.innerHTML = `
+                    <div class="spinner"></div>
+                    <p><strong>🔍 Verificando datos locales...</strong></p>
+                `;
+                
                 // Primero verificar datos locales
                 const datosLocales = verificarDatosLocales();
                 if (datosLocales) {
-                    processingData = datosLocales.datos;
-                    fechaUltimaActualizacion = datosLocales.fecha;
-                    mostrarResultados(processingData);
-                    mostrarInfoArchivo('Datos guardados', datosLocales.fecha, true);
+                    loadingDiv.innerHTML = `
+                        <div class="spinner"></div>
+                        <p><strong>📱 Cargando datos guardados...</strong></p>
+                        <p>Usando caché local para acceso rápido</p>
+                    `;
+                    
+                    setTimeout(() => {
+                        processingData = datosLocales.datos;
+                        fechaUltimaActualizacion = datosLocales.fecha;
+                        mostrarResultados(processingData);
+                        mostrarInfoArchivo('Datos guardados', datosLocales.fecha, true);
+                        mostrarMensajeExito('📱 Datos cargados desde caché local');
+                    }, 500);
                     return;
                 }
 
                 // Si no hay datos locales válidos, buscar en repositorio
+                loadingDiv.innerHTML = `
+                    <div class="spinner"></div>
+                    <p><strong>🔍 Detectando archivo más reciente...</strong></p>
+                    <p>Buscando en el repositorio...</p>
+                `;
+                
                 console.log('🔍 Detectando archivo más reciente...');
                 const archivoDetectado = await detectarArchivosDisponibles();
                 
+                loadingDiv.innerHTML = `
+                    <div class="spinner"></div>
+                    <p><strong>📥 Descargando: ${archivoDetectado.nombre}</strong></p>
+                    <p>Cargando desde el repositorio...</p>
+                `;
+                
                 console.log(`📥 Cargando: ${archivoDetectado.nombre}`);
+                const response = await fetch(archivoDetectado.url);
+                
+                if (!response.ok) {
+                    throw new Error(`No se pudo cargar el archivo: ${archivoDetectado.nombre}`);
+                }
+                
+                loadingDiv.innerHTML = `
+                    <div class="spinner"></div>
+                    <p><strong>⚡ Procesando datos...</strong></p>
+                    <p>Calculando indicadores trimestrales...</p>
+                `;
+                
+                const arrayBuffer = await response.arrayBuffer();
+                const workbook = XLSX.read(arrayBuffer);
+                const resultados = procesarWorkbook(workbook);
+                
+                if (resultados) {
+                    // Guardar datos localmente para próximas visitas
+                    guardarDatosLocalmente(resultados);
+                    fechaUltimaActualizacion = new Date();
+                    
+                    mostrarInfoArchivo(archivoDetectado.nombre, archivoDetectado.fecha, false);
+                    mostrarMensajeExito(`✅ Datos cargados: ${archivoDetectado.nombre}`);
+                }
+                
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                mostrarError('Error al cargar datos automáticamente: ' + error.message);
+            }
+        }
+
+        // Forzar actualización desde repositorio
+        async function forzarActualizacion() {
+            try {
+                // Mostrar estado de carga específico
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('results').style.display = 'none';
+                document.getElementById('exportSection').style.display = 'none';
+                
+                // Cambiar mensaje de carga
+                const loadingDiv = document.getElementById('loading');
+                loadingDiv.innerHTML = `
+                    <div class="spinner"></div>
+                    <p><strong>🔍 Buscando archivos más recientes...</strong></p>
+                    <p>Detectando automáticamente el Excel más actualizado del repositorio</p>
+                `;
+                
+                // Limpiar datos locales
+                localStorage.removeItem('bdd_datos_procesados');
+                localStorage.removeItem('bdd_fecha_actualizacion');
+                
+                // Mostrar progreso de detección
+                setTimeout(() => {
+                    loadingDiv.innerHTML = `
+                        <div class="spinner"></div>
+                        <p><strong>📥 Descargando archivo detectado...</strong></p>
+                        <p>Cargando datos del repositorio</p>
+                    `;
+                }, 1000);
+                
+                // Recargar desde repositorio
+                console.log('🚀 Forzando actualización desde repositorio...');
+                const archivoDetectado = await detectarArchivosDisponibles();
+                
+                // Actualizar mensaje
+                loadingDiv.innerHTML = `
+                    <div class="spinner"></div>
+                    <p><strong>⚡ Procesando: ${archivoDetectado.nombre}</strong></p>
+                    <p>Calculando indicadores trimestrales...</p>
+                `;
+                
+                console.log(`📥 Forzando carga de: ${archivoDetectado.nombre}`);
                 const response = await fetch(archivoDetectado.url);
                 
                 if (!response.ok) {
@@ -472,32 +572,20 @@
                 const workbook = XLSX.read(arrayBuffer);
                 const resultados = procesarWorkbook(workbook);
                 
-                // Guardar datos localmente para próximas visitas
-                guardarDatosLocalmente(resultados);
-                fechaUltimaActualizacion = new Date();
-                
-                mostrarInfoArchivo(archivoDetectado.nombre, archivoDetectado.fecha, false);
-                
-            } catch (error) {
-                mostrarError('Error al cargar datos automáticamente: ' + error.message);
-            }
-        }
-
-        // Forzar actualización desde repositorio
-        async function forzarActualizacion() {
-            try {
-                // Limpiar datos locales
-                localStorage.removeItem('bdd_datos_procesados');
-                localStorage.removeItem('bdd_fecha_actualizacion');
-                
-                document.getElementById('loading').style.display = 'block';
-                document.getElementById('results').style.display = 'none';
-                document.getElementById('exportSection').style.display = 'none';
-                
-                // Recargar desde repositorio
-                await cargarDatosPorDefecto();
+                if (resultados) {
+                    // Guardar datos localmente para próximas visitas
+                    guardarDatosLocalmente(resultados);
+                    fechaUltimaActualizacion = new Date();
+                    
+                    // Mostrar mensaje de éxito
+                    mostrarMensajeExito(`✅ Actualización completada: ${archivoDetectado.nombre}`);
+                    mostrarInfoArchivo(archivoDetectado.nombre, archivoDetectado.fecha, false);
+                } else {
+                    throw new Error('Error al procesar los datos del archivo');
+                }
                 
             } catch (error) {
+                document.getElementById('loading').style.display = 'none';
                 mostrarError('Error al actualizar datos: ' + error.message);
             }
         }
@@ -813,6 +901,13 @@
         // Mostrar resultados en tablas
         function mostrarResultados(resultados) {
             processingData = resultados;
+            
+            // Restablecer mensaje de carga original
+            const loadingDiv = document.getElementById('loading');
+            loadingDiv.innerHTML = `
+                <div class="spinner"></div>
+                <p>Procesando datos... Por favor espera.</p>
+            `;
             
             // Crear estructuras de datos para las tablas
             const fechas = Object.keys(resultados);
@@ -1239,16 +1334,45 @@
             }
         }
 
-        // Mostrar error
+        // Mostrar mensaje de éxito
+        function mostrarMensajeExito(mensaje) {
+            const container = document.querySelector('.container');
+            const exitoDiv = document.createElement('div');
+            exitoDiv.className = 'info-panel';
+            exitoDiv.style.background = '#d5f4e6';
+            exitoDiv.style.borderLeft = '4px solid #27ae60';
+            exitoDiv.style.color = '#155724';
+            exitoDiv.innerHTML = `<strong>${mensaje}</strong>`;
+            
+            // Insertar después del upload-section
+            const uploadSection = document.querySelector('.upload-section');
+            uploadSection.insertAdjacentElement('afterend', exitoDiv);
+            
+            // Remover después de 4 segundos
+            setTimeout(() => {
+                if (exitoDiv.parentNode) {
+                    exitoDiv.remove();
+                }
+            }, 4000);
+        }
+
+        // Mostrar error mejorado
         function mostrarError(mensaje) {
             document.getElementById('loading').style.display = 'none';
             const container = document.querySelector('.container');
             const errorDiv = document.createElement('div');
             errorDiv.className = 'error-panel';
             errorDiv.innerHTML = `<strong>❌ Error:</strong> ${mensaje}`;
-            container.appendChild(errorDiv);
             
-            setTimeout(() => errorDiv.remove(), 5000);
+            // Insertar después del upload-section
+            const uploadSection = document.querySelector('.upload-section');
+            uploadSection.insertAdjacentElement('afterend', errorDiv);
+            
+            setTimeout(() => {
+                if (errorDiv.parentNode) {
+                    errorDiv.remove();
+                }
+            }, 8000);
         }
 
         // Event Listeners
@@ -1265,6 +1389,10 @@
             document.getElementById('results').style.display = 'none';
             document.getElementById('exportSection').style.display = 'none';
             cargarDatosPorDefecto();
+        });
+
+        document.getElementById('forceUpdate').addEventListener('click', function() {
+            forzarActualizacion();
         });
 
         document.getElementById('processBtn').addEventListener('click', function() {
