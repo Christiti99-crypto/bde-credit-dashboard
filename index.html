@@ -263,7 +263,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>📊 Analizador BDD</h1>
+            <h1>Analizador BDD</h1>
             <p>Banco de Desarrollo del Ecuador - Análisis Trimestral de Cartera</p>
         </div>
 
@@ -272,28 +272,29 @@
                 <div class="file-input-wrapper">
                     <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls">
                     <label for="fileInput" class="file-input-label">
-                        📁 Seleccionar Archivo Excel
+                        Seleccionar Archivo Excel
                     </label>
                 </div>
                 
                 <button id="loadDefault" class="process-btn">
-                    🔄 Cargar Datos Automáticamente
+                    Cargar Datos Automáticamente
                 </button>
                 
                 <button id="forceUpdate" class="process-btn" style="background: linear-gradient(135deg, #e67e22, #d35400);">
-                    🚀 Forzar Actualización
+                    Forzar Actualización
                 </button>
                 
                 <button id="processBtn" class="process-btn" disabled>
-                    ⚡ Procesar Datos
+                    Procesar Datos
                 </button>
             </div>
             
             <div class="info-panel">
-                <strong>📋 Instrucciones:</strong>
+                <strong>Instrucciones:</strong>
                 <br>• Sube un archivo Excel actualizado o usa los datos por defecto del repositorio
                 <br>• El sistema procesará automáticamente solo las fechas trimestrales que ya han ocurrido
                 <br>• Los cálculos incluyen cartera productiva, inversión pública, coberturas y provisiones
+                <br>• Ahora con carga flexible de datos sin rangos fijos
             </div>
         </div>
 
@@ -303,32 +304,32 @@
         </div>
 
         <div class="results" id="results">
-            <div class="section-title">📊 COBERTURAS</div>
+            <div class="section-title">COBERTURAS</div>
             <div class="table-container">
                 <table id="coberturasTable"></table>
             </div>
 
-            <div class="section-title">💰 CARTERA PRODUCTIVO</div>
+            <div class="section-title">CARTERA PRODUCTIVO</div>
             <div class="table-container">
                 <table id="productivoTable"></table>
             </div>
 
-            <div class="section-title">🏛️ CARTERA INVERSIÓN PÚBLICA</div>
+            <div class="section-title">CARTERA INVERSIÓN PÚBLICA</div>
             <div class="table-container">
                 <table id="invPublicaTable"></table>
             </div>
 
-            <div class="section-title">📈 INDICADORES PRODUCTIVO</div>
+            <div class="section-title">INDICADORES PRODUCTIVO</div>
             <div class="table-container">
                 <table id="indicadoresProductivoTable"></table>
             </div>
 
-            <div class="section-title">📉 INDICADORES INVERSIÓN PÚBLICA</div>
+            <div class="section-title">INDICADORES INVERSIÓN PÚBLICA</div>
             <div class="table-container">
                 <table id="indicadoresInvTable"></table>
             </div>
 
-            <div class="section-title">💼 PROVISIONES</div>
+            <div class="section-title">PROVISIONES</div>
             <div class="table-container">
                 <table id="provisionesTable"></table>
             </div>
@@ -336,7 +337,7 @@
 
         <div class="export-section" id="exportSection" style="display: none;">
             <button id="exportBtn" class="export-btn">
-                📥 Exportar a Excel
+                Exportar a Excel
             </button>
         </div>
     </div>
@@ -369,7 +370,7 @@
                 try {
                     const response = await fetch(archivo.url, { method: 'HEAD' });
                     if (response.ok) {
-                        console.log(`✅ Archivo encontrado: ${archivo.nombre}`);
+                        console.log(`Archivo encontrado: ${archivo.nombre}`);
                         return archivo;
                     }
                 } catch (error) {
@@ -398,7 +399,7 @@
                     
                     // Si los datos tienen menos de 7 días, usarlos
                     if (diferenciaDias < 7) {
-                        console.log('📱 Usando datos guardados localmente');
+                        console.log('Usando datos guardados localmente');
                         return {
                             datos: JSON.parse(datosLocal),
                             fecha: fechaGuardada
@@ -416,7 +417,7 @@
             try {
                 localStorage.setItem('bdd_datos_procesados', JSON.stringify(datos));
                 localStorage.setItem('bdd_fecha_actualizacion', new Date().toISOString());
-                console.log('💾 Datos guardados localmente');
+                console.log('Datos guardados localmente');
             } catch (error) {
                 console.log('No se pudieron guardar datos localmente:', error);
             }
@@ -425,21 +426,21 @@
         // Mostrar información del archivo cargado
         function mostrarInfoArchivo(nombreArchivo, fecha, esLocal = false) {
             const infoPanel = document.querySelector('.info-panel');
-            const tipoFuente = esLocal ? '📱 Datos locales' : '🌐 Datos del repositorio';
+            const tipoFuente = esLocal ? 'Datos locales' : 'Datos del repositorio';
             const fechaFormateada = fecha.toLocaleDateString('es-EC', { 
                 year: 'numeric', 
                 month: 'long' 
             });
             
             infoPanel.innerHTML = `
-                <strong>📋 Instrucciones:</strong>
+                <strong>Instrucciones:</strong>
                 <br>• Sube un archivo Excel actualizado o usa los datos detectados automáticamente
                 <br>• El sistema procesará automáticamente solo las fechas trimestrales que ya han ocurrido
                 <br>• Los cálculos incluyen cartera productiva, inversión pública, coberturas y provisiones
-                <br>• Las fechas futuras no se mostrarán para evitar confusión
+                <br>• Ahora con carga flexible de datos sin rangos fijos
                 <br><br>
                 <strong>${tipoFuente}:</strong> ${nombreArchivo} (${fechaFormateada})
-                <br><strong>💡 Estado:</strong> ${esLocal ? 'Datos en caché - Actualizados automáticamente cada 7 días' : 'Datos más recientes del repositorio'}
+                <br><strong>Estado:</strong> ${esLocal ? 'Datos en caché - Actualizados automáticamente cada 7 días' : 'Datos más recientes del repositorio'}
             `;
         }
 
@@ -450,7 +451,7 @@
                 const loadingDiv = document.getElementById('loading');
                 loadingDiv.innerHTML = `
                     <div class="spinner"></div>
-                    <p><strong>🔍 Verificando datos locales...</strong></p>
+                    <p><strong>Verificando datos locales...</strong></p>
                 `;
                 
                 // Primero verificar datos locales
@@ -458,7 +459,7 @@
                 if (datosLocales) {
                     loadingDiv.innerHTML = `
                         <div class="spinner"></div>
-                        <p><strong>📱 Cargando datos guardados...</strong></p>
+                        <p><strong>Cargando datos guardados...</strong></p>
                         <p>Usando caché local para acceso rápido</p>
                     `;
                     
@@ -467,7 +468,7 @@
                         fechaUltimaActualizacion = datosLocales.fecha;
                         mostrarResultados(processingData);
                         mostrarInfoArchivo('Datos guardados', datosLocales.fecha, true);
-                        mostrarMensajeExito('📱 Datos cargados desde caché local');
+                        mostrarMensajeExito('Datos cargados desde caché local');
                     }, 500);
                     return;
                 }
@@ -475,20 +476,20 @@
                 // Si no hay datos locales válidos, buscar en repositorio
                 loadingDiv.innerHTML = `
                     <div class="spinner"></div>
-                    <p><strong>🔍 Detectando archivo más reciente...</strong></p>
+                    <p><strong>Detectando archivo más reciente...</strong></p>
                     <p>Buscando en el repositorio...</p>
                 `;
                 
-                console.log('🔍 Detectando archivo más reciente...');
+                console.log('Detectando archivo más reciente...');
                 const archivoDetectado = await detectarArchivosDisponibles();
                 
                 loadingDiv.innerHTML = `
                     <div class="spinner"></div>
-                    <p><strong>📥 Descargando: ${archivoDetectado.nombre}</strong></p>
+                    <p><strong>Descargando: ${archivoDetectado.nombre}</strong></p>
                     <p>Cargando desde el repositorio...</p>
                 `;
                 
-                console.log(`📥 Cargando: ${archivoDetectado.nombre}`);
+                console.log(`Cargando: ${archivoDetectado.nombre}`);
                 const response = await fetch(archivoDetectado.url);
                 
                 if (!response.ok) {
@@ -497,8 +498,8 @@
                 
                 loadingDiv.innerHTML = `
                     <div class="spinner"></div>
-                    <p><strong>⚡ Procesando datos...</strong></p>
-                    <p>Calculando indicadores trimestrales...</p>
+                    <p><strong>Procesando datos con carga flexible...</strong></p>
+                    <p>Calculando indicadores trimestrales sin rangos fijos...</p>
                 `;
                 
                 const arrayBuffer = await response.arrayBuffer();
@@ -511,7 +512,7 @@
                     fechaUltimaActualizacion = new Date();
                     
                     mostrarInfoArchivo(archivoDetectado.nombre, archivoDetectado.fecha, false);
-                    mostrarMensajeExito(`✅ Datos cargados: ${archivoDetectado.nombre}`);
+                    mostrarMensajeExito(`Datos cargados: ${archivoDetectado.nombre}`);
                 }
                 
             } catch (error) {
@@ -532,7 +533,7 @@
                 const loadingDiv = document.getElementById('loading');
                 loadingDiv.innerHTML = `
                     <div class="spinner"></div>
-                    <p><strong>🔍 Buscando archivos más recientes...</strong></p>
+                    <p><strong>Buscando archivos más recientes...</strong></p>
                     <p>Detectando automáticamente el Excel más actualizado del repositorio</p>
                 `;
                 
@@ -544,23 +545,23 @@
                 setTimeout(() => {
                     loadingDiv.innerHTML = `
                         <div class="spinner"></div>
-                        <p><strong>📥 Descargando archivo detectado...</strong></p>
-                        <p>Cargando datos del repositorio</p>
+                        <p><strong>Descargando archivo detectado...</strong></p>
+                        <p>Cargando datos del repositorio con carga flexible</p>
                     `;
                 }, 1000);
                 
                 // Recargar desde repositorio
-                console.log('🚀 Forzando actualización desde repositorio...');
+                console.log('Forzando actualización desde repositorio...');
                 const archivoDetectado = await detectarArchivosDisponibles();
                 
                 // Actualizar mensaje
                 loadingDiv.innerHTML = `
                     <div class="spinner"></div>
-                    <p><strong>⚡ Procesando: ${archivoDetectado.nombre}</strong></p>
-                    <p>Calculando indicadores trimestrales...</p>
+                    <p><strong>Procesando: ${archivoDetectado.nombre}</strong></p>
+                    <p>Calculando indicadores trimestrales sin rangos fijos...</p>
                 `;
                 
-                console.log(`📥 Forzando carga de: ${archivoDetectado.nombre}`);
+                console.log(`Forzando carga de: ${archivoDetectado.nombre}`);
                 const response = await fetch(archivoDetectado.url);
                 
                 if (!response.ok) {
@@ -577,7 +578,7 @@
                     fechaUltimaActualizacion = new Date();
                     
                     // Mostrar mensaje de éxito
-                    mostrarMensajeExito(`✅ Actualización completada: ${archivoDetectado.nombre}`);
+                    mostrarMensajeExito(`Actualización completada: ${archivoDetectado.nombre}`);
                     mostrarInfoArchivo(archivoDetectado.nombre, archivoDetectado.fecha, false);
                 } else {
                     throw new Error('Error al procesar los datos del archivo');
@@ -650,35 +651,32 @@
             return fechasTrimestrales;
         }
 
-        // Cargar datos por defecto desde GitHub
-        async function cargarDatosPorDefectoOriginal() {
-            try {
-                const response = await fetch('BDD/BANCO DE DESARROLLO DEL ECUADOR B.P. 2025_06.xlsx');
-                if (!response.ok) {
-                    throw new Error('No se pudo cargar el archivo por defecto');
-                }
-                const arrayBuffer = await response.arrayBuffer();
-                const workbook = XLSX.read(arrayBuffer);
-                procesarWorkbook(workbook);
-            } catch (error) {
-                mostrarError('Error al cargar datos por defecto: ' + error.message);
-            }
-        }
-
-        // Procesar archivo Excel
+        // Procesar archivo Excel con carga flexible
         function procesarWorkbook(workbook) {
             try {
-                // Procesar hoja principal
-                const mainSheet = workbook.Sheets[workbook.SheetNames[0]];
+                // Buscar hoja principal (puede ser "BAL" o la primera hoja)
+                let mainSheetName = 'BAL';
+                if (!workbook.Sheets[mainSheetName]) {
+                    mainSheetName = workbook.SheetNames[0];
+                }
+                
+                const mainSheet = workbook.Sheets[mainSheetName];
                 const indicSheet = workbook.Sheets['INDIC CARTERA'];
                 
                 if (!mainSheet || !indicSheet) {
-                    throw new Error('No se encontraron las hojas requeridas en el archivo');
+                    throw new Error(`No se encontraron las hojas requeridas en el archivo. Hojas disponibles: ${workbook.SheetNames.join(', ')}`);
                 }
 
-                // Obtener datos en formato JSON
-                const mainData = XLSX.utils.sheet_to_json(mainSheet, { header: 1 });
-                const indicData = XLSX.utils.sheet_to_json(indicSheet, { header: 1 });
+                // Obtener datos en formato JSON desde fila 5 (skip = 4) - CARGA FLEXIBLE
+                const mainData = XLSX.utils.sheet_to_json(mainSheet, { 
+                    header: 1,
+                    range: 4  // Empezar desde fila 5 (índice 4), sin límite de columnas
+                });
+                
+                const indicData = XLSX.utils.sheet_to_json(indicSheet, { 
+                    header: 1,
+                    range: 4  // Empezar desde fila 5 (índice 4), sin límite de columnas
+                });
 
                 // Procesar datos
                 const resultados = procesarDatos(mainData, indicData);
@@ -692,7 +690,7 @@
             }
         }
 
-        // Procesar datos principales
+        // Procesar datos principales con carga flexible
         function procesarDatos(mainData, indicData) {
             // Aplicar nombres de columnas
             const vectorFechas = generarVectorFechas();
@@ -700,34 +698,40 @@
             // Generar fechas trimestrales dinámicamente basándose en datos disponibles
             fechasTrimestrales = generarFechasTrimestralesDisponibles(vectorFechas);
 
-            // Procesar datos principales (desde fila 5, columnas 3 en adelante)
-            const datosMain = mainData.slice(4).map(row => {
+            // Procesar datos principales - CARGA FLEXIBLE (desde fila 1, ya que sheet_to_json con range: 4 ya saltó las primeras 4 filas)
+            const datosMain = mainData.map(row => {
+                if (!row || row.length < 3) return null; // Filtrar filas vacías
+                
                 const codigo = row[0];
                 const cuenta = row[1];
                 const valores = {};
                 
-                for (let i = 2; i < row.length - 2 && i - 2 < vectorFechas.length; i++) {
+                // Procesar todas las columnas disponibles (carga flexible)
+                for (let i = 2; i < row.length && i - 2 < vectorFechas.length; i++) {
                     const fecha = vectorFechas[i - 2];
                     valores[fecha] = parseFloat(row[i]) || 0;
                 }
                 
                 return { codigo, cuenta, valores };
-            }).filter(row => row.codigo);
+            }).filter(row => row && row.codigo); // Filtrar nulls y filas sin código
 
-            // Procesar datos de indicadores
-            const datosIndic = indicData.slice(4).map(row => {
+            // Procesar datos de indicadores - CARGA FLEXIBLE
+            const datosIndic = indicData.map(row => {
+                if (!row || row.length < 4) return null; // Filtrar filas vacías
+                
                 const item = row[0];
                 const formula = row[1];
                 const variables = row[2];
                 const valores = {};
                 
+                // Procesar todas las columnas disponibles (carga flexible)
                 for (let i = 3; i < row.length && i - 3 < vectorFechas.length; i++) {
                     const fecha = vectorFechas[i - 3];
                     valores[fecha] = parseFloat(row[i]) || 0;
                 }
                 
                 return { item, formula, variables, valores };
-            }).filter(row => row.item);
+            }).filter(row => row && row.item); // Filtrar nulls y filas sin item
 
             // Procesar cada fecha trimestral disponible
             const resultados = {};
@@ -1092,7 +1096,7 @@
             // Definir secciones con sus datos y colores
             const secciones = [
                 {
-                    titulo: '📊 COBERTURAS',
+                    titulo: 'COBERTURAS',
                     datos: [
                         ['COBERTURA CARTERA PRODUCTIVO (%)', ...fechas.map(f => processingData[f].coberturas.COBERTURA_CARTERA_PRODUCTIVO)],
                         ['COBERTURA CARTERA INVERSIÓN PÚBLICA (%)', ...fechas.map(f => processingData[f].coberturas.COBERTURA_CARTERA_INVERSIÓN_PÚBLICA)],
@@ -1101,7 +1105,7 @@
                     bgColor: 'FCF3CF'
                 },
                 {
-                    titulo: '💰 CARTERA PRODUCTIVO',
+                    titulo: 'CARTERA PRODUCTIVO',
                     datos: [
                         ['Total Cartera de Crédito Productivo', ...fechas.map(f => processingData[f].cartera_productivo.TOTAL_C_CREDITO_PRODUCTIVO)],
                         ['Total Provisiones Específicas C. Productivo', ...fechas.map(f => processingData[f].cartera_productivo.TOTAL_PROVISIONES_ESPECIFICAS_C_PRODUCTIVO)],
@@ -1114,7 +1118,7 @@
                     bgColor: 'EBF5FB'
                 },
                 {
-                    titulo: '🏛️ CARTERA INVERSIÓN PÚBLICA',
+                    titulo: 'CARTERA INVERSIÓN PÚBLICA',
                     datos: [
                         ['Total Cartera de Crédito Inversión Publica', ...fechas.map(f => processingData[f].cartera_inv_publica.TOTAL_C_DE_CREDITO_C_IN_PUBLICO)],
                         ['Total Provisiones Específicas Inversión Publica', ...fechas.map(f => processingData[f].cartera_inv_publica.TOTAL_PROVISIONES_ESPECIFICAS_C_IN_PUBLICO)],
@@ -1127,7 +1131,7 @@
                     bgColor: 'E8F8F5'
                 },
                 {
-                    titulo: '📈 INDICADORES PRODUCTIVO',
+                    titulo: 'INDICADORES PRODUCTIVO',
                     datos: [
                         ['CARTERA PRODUCTIVO', ...fechas.map(f => processingData[f].indicadores_productivo.CARTERA_PRODUCTIVO)],
                         ['PORCENTAJE DE CARTERA POR VENCER', ...fechas.map(f => processingData[f].indicadores_productivo.PORCENTAJE_CARTERA_X_VENCER)],
@@ -1138,7 +1142,7 @@
                     bgColor: 'FEF9E7'
                 },
                 {
-                    titulo: '📉 INDICADORES INVERSIÓN PÚBLICA',
+                    titulo: 'INDICADORES INVERSIÓN PÚBLICA',
                     datos: [
                         ['CARTERA INVERSIÓN PÚBLICA', ...fechas.map(f => processingData[f].indicadores_inv_publica.CARTERA_INVERSIÓN_PÚBLICA)],
                         ['PORCENTAJE DE CARTERA POR VENCER', ...fechas.map(f => processingData[f].indicadores_inv_publica.PORCENTAJE_CARTERA_X_VENCER)],
@@ -1149,7 +1153,7 @@
                     bgColor: 'F4ECF7'
                 },
                 {
-                    titulo: '💼 PROVISIONES',
+                    titulo: 'PROVISIONES',
                     datos: [
                         ['Productivo', ...fechas.map(f => processingData[f].provisiones.Productivo)],
                         ['Inversión Publica', ...fechas.map(f => processingData[f].provisiones.Inversión_Publica)],
@@ -1287,6 +1291,7 @@
                 ['NOTAS:'],
                 ['• Los valores monetarios están expresados en dólares estadounidenses'],
                 ['• Los porcentajes se muestran con 2 decimales'],
+                ['• Los datos se cargan con formato flexible sin rangos fijos'],
                 ['• Los datos corresponden a fechas trimestrales efectivamente procesadas']
             ];
 
@@ -1327,6 +1332,8 @@
                 link.click();
                 window.URL.revokeObjectURL(url);
                 
+                mostrarMensajeExito(`Archivo Excel exportado exitosamente: Reporte_Consolidado_Trimestral_BDD_${timestamp}.xlsx`);
+                
             } catch (error) {
                 console.error('Error al exportar:', error);
                 alert('Error al generar el archivo Excel. Intenta de nuevo.');
@@ -1361,7 +1368,7 @@
             const container = document.querySelector('.container');
             const errorDiv = document.createElement('div');
             errorDiv.className = 'error-panel';
-            errorDiv.innerHTML = `<strong>❌ Error:</strong> ${mensaje}`;
+            errorDiv.innerHTML = `<strong>Error:</strong> ${mensaje}`;
             
             // Insertar después del upload-section
             const uploadSection = document.querySelector('.upload-section');
@@ -1379,7 +1386,7 @@
             const file = e.target.files[0];
             if (file) {
                 document.getElementById('processBtn').disabled = false;
-                document.querySelector('.file-input-label').textContent = `📁 ${file.name}`;
+                document.querySelector('.file-input-label').textContent = `${file.name}`;
             }
         });
 
