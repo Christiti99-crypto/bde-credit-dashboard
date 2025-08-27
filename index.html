@@ -444,6 +444,30 @@
             `;
         }
 
+        // Mostrar información de archivo subido por el usuario
+        function mostrarInfoArchivoSubido(nombreArchivo, fecha) {
+            const infoPanel = document.querySelector('.info-panel');
+            const fechaFormateada = fecha.toLocaleDateString('es-EC', { 
+                year: 'numeric', 
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            infoPanel.innerHTML = `
+                <strong>Instrucciones:</strong>
+                <br>• Sube un archivo Excel actualizado o usa los datos detectados automáticamente
+                <br>• El sistema procesará automáticamente solo las fechas trimestrales que ya han ocurrido
+                <br>• Los cálculos incluyen cartera productiva, inversión pública, coberturas y provisiones
+                <br>• Ahora con carga flexible de datos sin rangos fijos
+                <br><br>
+                <strong>Archivo subido por el usuario:</strong> ${nombreArchivo}
+                <br><strong>Procesado el:</strong> ${fechaFormateada}
+                <br><strong>Estado:</strong> Datos procesados desde archivo local subido
+            `;
+        }
+
         // Cargar datos por defecto con detección automática
         async function cargarDatosPorDefecto() {
             try {
@@ -652,7 +676,7 @@
         }
 
         // Procesar archivo Excel con carga flexible
-        function procesarWorkbook(workbook) {
+        function procesarWorkbook(workbook, esArchivoSubido = false, nombreArchivo = null) {
             try {
                 // Buscar hoja principal (puede ser "BAL" o la primera hoja)
                 let mainSheetName = 'BAL';
@@ -680,7 +704,11 @@
 
                 // Procesar datos
                 const resultados = procesarDatos(mainData, indicData);
-                mostrarResultados(resultados);
+                
+                // Solo mostrar resultados si no es archivo subido (para evitar doble procesamiento)
+                if (!esArchivoSubido) {
+                    mostrarResultados(resultados);
+                }
                 
                 return resultados; // Retornar para poder guardar
                 
@@ -1409,13 +1437,46 @@
             document.getElementById('results').style.display = 'none';
             document.getElementById('exportSection').style.display = 'none';
 
+            // Actualizar mensaje de carga para archivo subido
+            const loadingDiv = document.getElementById('loading');
+            loadingDiv.innerHTML = `
+                <div class="spinner"></div>
+                <p><strong>Procesando archivo subido...</strong></p>
+                <p>Analizando: ${file.name}</p>
+            `;
+
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
+                    // Leer el workbook desde los datos del archivo subido
                     const workbook = XLSX.read(e.target.result, { type: 'binary' });
-                    procesarWorkbook(workbook);
+                    
+                    // Procesar como archivo subido (no del repositorio)
+                    const resultados = procesarWorkbook(workbook, true, file.name);
+                    
+                    if (resultados) {
+                        // Actualizar datos globales
+                        processingData = resultados;
+                        const fechaActual = new Date();
+                        fechaUltimaActualizacion = fechaActual;
+                        
+                        // Mostrar resultados del archivo subido
+                        mostrarResultados(resultados);
+                        
+                        // Actualizar información del archivo procesado
+                        mostrarInfoArchivoSubido(file.name, fechaActual);
+                        mostrarMensajeExito(`Archivo procesado exitosamente: ${file.name}`);
+                        
+                        // Limpiar datos locales ya que se subió un archivo nuevo
+                        localStorage.removeItem('bdd_datos_procesados');
+                        localStorage.removeItem('bdd_fecha_actualizacion');
+                        
+                        console.log('Archivo subido procesado correctamente:', file.name);
+                    } else {
+                        throw new Error('Error al procesar los datos del archivo subido');
+                    }
                 } catch (error) {
-                    mostrarError('Error al leer el archivo: ' + error.message);
+                    mostrarError('Error al procesar el archivo subido: ' + error.message);
                 }
             };
             reader.readAsBinaryString(file);
