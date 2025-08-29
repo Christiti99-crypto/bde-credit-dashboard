@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Banco de Desarrollo del Ecuador - Analizador Trimestral</title>
+    <title>Analizador BDD - Banco de Desarrollo del Ecuador</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -13,118 +16,115 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
+            padding: 20px;
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
         }
 
         .header {
-            text-align: center;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
             padding: 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
         }
 
         .header h1 {
-            color: #2c3e50;
-            font-size: 2.5em;
+            font-size: 2.5rem;
             margin-bottom: 10px;
-            font-weight: 700;
+            font-weight: 300;
         }
 
         .header p {
-            color: #7f8c8d;
-            font-size: 1.1em;
+            font-size: 1.1rem;
+            opacity: 0.9;
         }
 
         .upload-section {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        }
-
-        .file-upload {
-            border: 2px dashed #3498db;
-            border-radius: 10px;
             padding: 30px;
-            text-align: center;
-            transition: all 0.3s ease;
-            cursor: pointer;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
         }
 
-        .file-upload:hover {
-            border-color: #2980b9;
-            background: rgba(52, 152, 219, 0.05);
+        .upload-container {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
         }
 
-        .file-upload.dragover {
-            border-color: #27ae60;
-            background: rgba(39, 174, 96, 0.1);
-        }
-
-        .upload-icon {
-            font-size: 3em;
-            color: #3498db;
-            margin-bottom: 15px;
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
         }
 
         .file-input {
             display: none;
         }
 
-        .btn {
-            background: linear-gradient(45deg, #3498db, #2980b9);
+        .file-input-label {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .file-input-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .process-btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #27ae60, #229954);
             color: white;
             border: none;
-            padding: 12px 25px;
-            border-radius: 25px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 1em;
-            font-weight: 600;
+            font-size: 1rem;
+            font-weight: 500;
             transition: all 0.3s ease;
-            margin: 5px;
         }
 
-        .btn:hover {
+        .process-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
         }
 
-        .btn-success {
-            background: linear-gradient(45deg, #27ae60, #229954);
-        }
-
-        .btn-download {
-            background: linear-gradient(45deg, #e74c3c, #c0392b);
+        .process-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
 
         .loading {
             display: none;
             text-align: center;
-            padding: 20px;
+            padding: 30px;
         }
 
         .spinner {
             border: 4px solid #f3f3f3;
             border-top: 4px solid #3498db;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
+            margin: 0 auto 20px;
         }
 
         @keyframes spin {
@@ -133,692 +133,1470 @@
         }
 
         .results {
+            padding: 30px;
             display: none;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 25px;
-            margin-top: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
 
         .section-title {
-            background: linear-gradient(45deg, #34495e, #2c3e50);
+            background: linear-gradient(135deg, #34495e, #2c3e50);
             color: white;
-            padding: 15px;
-            margin: 20px 0 0 0;
-            border-radius: 10px;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        .section-title:first-of-type {
-            margin-top: 0;
+            padding: 15px 25px;
+            margin: 25px 0 15px 0;
+            border-radius: 8px;
+            font-size: 1.3rem;
+            font-weight: 500;
         }
 
         .table-container {
             overflow-x: auto;
-            margin: 15px 0;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
             background: white;
-            border-radius: 10px;
-            overflow: hidden;
         }
 
         th {
-            background: #2c3e50;
+            background: linear-gradient(135deg, #2c3e50, #34495e);
             color: white;
-            padding: 12px;
-            text-align: left;
-            font-weight: 600;
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: 500;
+            font-size: 0.9rem;
         }
 
         td {
-            padding: 10px 12px;
-            border-bottom: 1px solid #ecf0f1;
+            padding: 10px 8px;
+            text-align: right;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 0.85rem;
+        }
+
+        td:first-child {
+            text-align: left;
+            font-weight: 500;
+            background: #f8f9fa;
+            min-width: 300px;
         }
 
         tr:hover {
-            background: rgba(52, 152, 219, 0.05);
+            background: #f1f3f4;
         }
 
-        .concept-column {
-            font-weight: 600;
-            color: #2c3e50;
-        }
+        .cobertura-row { background: #fcf3cf !important; }
+        .productivo-row { background: #ebf5fb !important; }
+        .inv-publica-row { background: #e8f8f5 !important; }
+        .indicadores-prod-row { background: #fef9e7 !important; }
+        .indicadores-inv-row { background: #f4ecf7 !important; }
+        .provisiones-row { background: #f8f9fa !important; }
 
-        .number-column {
-            text-align: right;
-            font-family: 'Consolas', monospace;
-        }
-
-        .coberturas { background: rgba(252, 243, 207, 0.5); }
-        .productivo { background: rgba(235, 245, 251, 0.5); }
-        .inv-publica { background: rgba(232, 248, 245, 0.5); }
-        .indicadores-prod { background: rgba(254, 249, 231, 0.5); }
-        .indicadores-inv { background: rgba(244, 236, 247, 0.5); }
-        .provisiones { background: rgba(248, 249, 250, 0.5); }
-
-        .error {
-            background: #e74c3c;
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 15px 0;
-            display: none;
-        }
-
-        .success {
-            background: #27ae60;
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 15px 0;
-            display: none;
-        }
-
-        .controls {
+        .export-section {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
             text-align: center;
+        }
+
+        .export-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+        }
+
+        .info-panel {
+            background: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 15px;
             margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .error-panel {
+            background: #fdf2f2;
+            border-left: 4px solid #e74c3c;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+            color: #721c24;
         }
 
         @media (max-width: 768px) {
             .container {
-                padding: 10px;
+                margin: 10px;
+                border-radius: 10px;
             }
             
             .header h1 {
-                font-size: 2em;
+                font-size: 2rem;
             }
             
-            table {
-                font-size: 0.9em;
+            .upload-container {
+                flex-direction: column;
+            }
+            
+            th, td {
+                padding: 8px 4px;
+                font-size: 0.8rem;
+            }
+            
+            td:first-child {
+                min-width: 200px;
             }
         }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🏦 Banco de Desarrollo del Ecuador</h1>
-            <p>Analizador de Cartera Trimestral - Reporte Consolidado</p>
+            <h1>Analizador BDD</h1>
+            <p>Banco de Desarrollo del Ecuador - Análisis Trimestral de Cartera</p>
         </div>
 
         <div class="upload-section">
-            <h3>📁 Cargar Archivo Excel</h3>
-            <div class="file-upload" id="fileUpload">
-                <div class="upload-icon">📊</div>
-                <p><strong>Arrastra el archivo Excel aquí o haz clic para seleccionar</strong></p>
-                <p>Formato esperado: BANCO DE DESARROLLO DEL ECUADOR B.P. YYYY_MM.xlsx</p>
-                <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls">
+            <div class="upload-container">
+                <div class="file-input-wrapper">
+                    <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls">
+                    <label for="fileInput" class="file-input-label">
+                        Seleccionar Archivo Excel
+                    </label>
+                </div>
+                
+                <button id="loadDefault" class="process-btn">
+                    Cargar Datos Automáticamente
+                </button>
+                
+                <button id="forceUpdate" class="process-btn" style="background: linear-gradient(135deg, #e67e22, #d35400);">
+                    Forzar Actualización
+                </button>
+                
+                <button id="processBtn" class="process-btn" disabled>
+                    Procesar Datos
+                </button>
             </div>
             
-            <div class="controls">
-                <button class="btn" onclick="loadDefaultFile()">📈 Cargar Datos por Defecto (2025_06)</button>
-                <button class="btn btn-success" onclick="processFile()" id="processBtn" style="display:none;">🔄 Procesar Archivo</button>
+            <div class="info-panel">
+                <strong>Instrucciones:</strong>
+                <br>• Sube un archivo Excel actualizado o usa los datos por defecto del repositorio
+                <br>• El sistema procesará automáticamente solo las fechas trimestrales que ya han ocurrido
+                <br>• Los cálculos incluyen cartera productiva, inversión pública, coberturas y provisiones
+                <br>• Ahora con carga flexible de datos sin rangos fijos
             </div>
-
-            <div class="error" id="errorMsg"></div>
-            <div class="success" id="successMsg"></div>
         </div>
 
         <div class="loading" id="loading">
             <div class="spinner"></div>
-            <p>Procesando archivo Excel...</p>
+            <p>Procesando datos... Por favor espera.</p>
         </div>
 
         <div class="results" id="results">
-            <div class="controls">
-                <button class="btn btn-download" onclick="downloadExcel()">💾 Descargar Reporte Excel</button>
+            <div class="section-title">COBERTURAS</div>
+            <div class="table-container">
+                <table id="coberturasTable"></table>
             </div>
-            <div id="tablesContainer"></div>
+
+            <div class="section-title">CARTERA PRODUCTIVO</div>
+            <div class="table-container">
+                <table id="productivoTable"></table>
+            </div>
+
+            <div class="section-title">CARTERA INVERSIÓN PÚBLICA</div>
+            <div class="table-container">
+                <table id="invPublicaTable"></table>
+            </div>
+
+            <div class="section-title">INDICADORES PRODUCTIVO</div>
+            <div class="table-container">
+                <table id="indicadoresProductivoTable"></table>
+            </div>
+
+            <div class="section-title">INDICADORES INVERSIÓN PÚBLICA</div>
+            <div class="table-container">
+                <table id="indicadoresInvTable"></table>
+            </div>
+
+            <div class="section-title">PROVISIONES</div>
+            <div class="table-container">
+                <table id="provisionesTable"></table>
+            </div>
+        </div>
+
+        <div class="export-section" id="exportSection" style="display: none;">
+            <button id="exportBtn" class="export-btn">
+                Exportar a Excel
+            </button>
         </div>
     </div>
 
     <script>
-        let currentData = null;
-        let processedResults = null;
+        let processingData = null;
+        let fechasTrimestrales = [];
+        let datosGuardados = null;
+        let fechaUltimaActualizacion = null;
+        let origenDatos = null; // 'repositorio', 'archivo_subido', 'cache_local'
 
-        // Configuración de carga de archivos
-        const fileUpload = document.getElementById('fileUpload');
-        const fileInput = document.getElementById('fileInput');
-
-        fileUpload.addEventListener('click', () => fileInput.click());
-        fileUpload.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            fileUpload.classList.add('dragover');
-        });
-        fileUpload.addEventListener('dragleave', () => {
-            fileUpload.classList.remove('dragover');
-        });
-        fileUpload.addEventListener('drop', (e) => {
-            e.preventDefault();
-            fileUpload.classList.remove('dragover');
-            handleFile(e.dataTransfer.files[0]);
-        });
-
-        fileInput.addEventListener('change', (e) => {
-            handleFile(e.target.files[0]);
-        });
-
-        function handleFile(file) {
-            if (!file) return;
+        // Detectar archivos BDD disponibles automáticamente
+        async function detectarArchivosDisponibles() {
+            const currentYear = new Date().getFullYear();
+            const archivosAProbrar = [];
             
-            if (!file.name.toLowerCase().endsWith('.xlsx') && !file.name.toLowerCase().endsWith('.xls')) {
-                showError('Por favor selecciona un archivo Excel (.xlsx o .xls)');
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    currentData = new Uint8Array(e.target.result);
-                    showSuccess(`Archivo "${file.name}" cargado correctamente`);
-                    document.getElementById('processBtn').style.display = 'inline-block';
-                } catch (error) {
-                    showError('Error al leer el archivo: ' + error.message);
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        }
-
-        async function loadDefaultFile() {
-            showLoading(true);
-            try {
-                // Intentar cargar el archivo por defecto desde la ruta especificada
-                const response = await fetch('BDD/BANCO DE DESARROLLO DEL ECUADOR B.P. 2025_06.xlsx');
-                if (!response.ok) {
-                    throw new Error(`No se pudo cargar el archivo por defecto. Código: ${response.status}`);
-                }
-                
-                const arrayBuffer = await response.arrayBuffer();
-                currentData = new Uint8Array(arrayBuffer);
-                showSuccess('Archivo por defecto cargado correctamente (2025_06)');
-                processFile();
-            } catch (error) {
-                showError('No se pudo cargar el archivo por defecto. Por favor, sube manualmente el archivo Excel.');
-                console.error('Error:', error);
-            } finally {
-                showLoading(false);
-            }
-        }
-
-        function processFile() {
-            if (!currentData) {
-                showError('No hay archivo para procesar');
-                return;
-            }
-
-            showLoading(true);
-            
-            setTimeout(() => {
-                try {
-                    const workbook = XLSX.read(currentData, {
-                        cellStyles: true,
-                        cellFormulas: true,
-                        cellDates: true,
-                        cellNF: true,
-                        sheetStubs: true
+            // Generar lista de archivos posibles (últimos 2 años)
+            for (let year = currentYear; year >= currentYear - 1; year--) {
+                for (let month = 12; month >= 1; month--) {
+                    const monthStr = String(month).padStart(2, '0');
+                    archivosAProbrar.push({
+                        url: `BDD/BANCO DE DESARROLLO DEL ECUADOR B.P. ${year}_${monthStr}.xlsx`,
+                        fecha: new Date(year, month - 1, 1),
+                        nombre: `${year}_${monthStr}`
                     });
-
-                    // Procesar las hojas BAL e INDIC CARTERA
-                    const balSheet = workbook.Sheets['BAL'];
-                    const indicSheet = workbook.Sheets['INDIC CARTERA'];
-
-                    if (!balSheet || !indicSheet) {
-                        throw new Error('No se encontraron las hojas "BAL" e "INDIC CARTERA" en el archivo Excel');
-                    }
-
-                    // Convertir a JSON saltando las primeras 4 filas (skip = 4)
-                    const balData = XLSX.utils.sheet_to_json(balSheet, { range: 4 });
-                    const indicData = XLSX.utils.sheet_to_json(indicSheet, { range: 4 });
-
-                    // Procesar los datos
-                    processedResults = processBankData(balData, indicData);
-                    
-                    displayResults(processedResults);
-                    showSuccess('Datos procesados correctamente');
-                    document.getElementById('results').style.display = 'block';
-                    
-                } catch (error) {
-                    showError('Error al procesar el archivo: ' + error.message);
-                    console.error('Error completo:', error);
-                } finally {
-                    showLoading(false);
                 }
-            }, 100);
-        }
-
-        function processBankData(balData, indicData) {
-            // Crear fechas trimestrales de los últimos 3 años
-            const fechasTrimestrales = [];
-            const currentYear = 2025;
-            
-            for (let year = currentYear - 2; year <= currentYear; year++) {
-                fechasTrimestrales.push(`31/03/${year}`);
-                fechasTrimestrales.push(`30/06/${year}`);
-                fechasTrimestrales.push(`30/09/${year}`);
-                fechasTrimestrales.push(`31/12/${year}`);
             }
-
-            // Obtener las últimas 3 fechas disponibles
-            const fechasDisponibles = fechasTrimestrales.slice(-3);
             
-            const results = {};
-
-            fechasDisponibles.forEach(fecha => {
-                const fechaFormatted = formatDateForExcel(fecha);
-                results[fecha] = procesarFechaTrimestral(fecha, fechaFormatted, balData, indicData);
-            });
-
-            return results;
-        }
-
-        function formatDateForExcel(dateStr) {
-            // Convertir formato DD/MM/YYYY a formato que Excel podría usar
-            const parts = dateStr.split('/');
-            return `${parts[2]}-${parts[1]}-${parts[0]}`;
-        }
-
-        function procesarFechaTrimestral(fecha, fechaCol, balData, indicData) {
-            // Función auxiliar para buscar valores por código
-            const findByCode = (code) => {
-                const row = balData.find(r => r['__EMPTY'] == code || r['CÓDIGO'] == code);
-                return row ? (row[fechaCol] || row[fecha] || 0) : 0;
-            };
-
-            const findByCodeArray = (codes) => {
-                return codes.reduce((sum, code) => sum + findByCode(code), 0);
-            };
-
-            // SEGMENTO PRODUCTIVO
-            const TOTAL_C_CREDITO_PRODUCTIVO = findByCodeArray([1401, 1409, 1417, 1425, 1433, 1441, 1449, 1457, 1465]);
+            // Probar archivos en orden descendente (más reciente primero)
+            for (let archivo of archivosAProbrar) {
+                try {
+                    const response = await fetch(archivo.url, { method: 'HEAD' });
+                    if (response.ok) {
+                        console.log(`Archivo encontrado: ${archivo.nombre}`);
+                        return archivo;
+                    }
+                } catch (error) {
+                    // Silenciosamente continuar con el siguiente archivo
+                }
+            }
             
-            let prov149905 = findByCode('149905') * -1;
-            const TOTAL_PROVISIONES_ESPECIFICAS_C_PRODUCTIVO = prov149905 + findByCodeArray(['741401', '741409']);
-            
-            const TOTAL_PROVISIÓN_GENÉRICA_C_PRODUCTIVO = findByCode('741420');
-            const CARTERA_X_VENCER_C_PRODUCTIVO = findByCodeArray([1401, 1409, 1417, '149105', '149405']);
-            const TOTAL_CARTERA_RIESGO_C_PRODUCTIVO = findByCodeArray([1425, 1433, 1441, 1449, 1457, 1465]);
-            const CARTERA_NDI_C_PRODUCTIVO = findByCodeArray([1425, 1433, 1441, '149205', '149505']);
-            const CARTERA_VENCIDA_C_PRODUCTIVO = findByCodeArray([1449, 1457, 1465, '149305', '149605']);
-
-            // SEGMENTO INVERSIÓN PÚBLICA
-            const TOTAL_C_DE_CREDITO_C_IN_PUBLICO = findByCodeArray([1474, 1476, 1478, 1480, 1482, 1484, 1486, 1488, 1490, 1491, 1492, 1493, 1494, 1495, 1496]);
-            
-            let prov149960 = findByCode('149960') * -1;
-            const TOTAL_PROVISIONES_ESPECIFICAS_C_IN_PUBLICO = prov149960 + findByCodeArray(['741433', '741437']);
-            
-            const TOTAL_PROVISIÓN_GENÉRICA_CREDITO_C_IN_PUBLICO = findByCode('741442');
-            const TOTAL_CARTERA_RIESGO_C_IN_PUBLICO = findByCodeArray([1480, 1482, 1484, 1486, 1488, 1490, '149245', '149345', '149545', '149645']);
-            const CARTERA_X_VENCER_C_IN_PUBLICO = findByCodeArray([1474, 1476, 1478, 1491, 1494]);
-            const CARTERA_NDI_IN_PUBLICO = findByCodeArray([1480, 1482, 1484, '149545', '149245']);
-            const CARTERA_VENCIDA_IN_PUBLICO = findByCodeArray([1486, 1488, 1490, '149345', '149645']);
-
-            // Cálculos de porcentajes
-            const PORCENTAJE_CARTERA_X_VENCER_PROD = TOTAL_C_CREDITO_PRODUCTIVO !== 0 ? (CARTERA_X_VENCER_C_PRODUCTIVO / TOTAL_C_CREDITO_PRODUCTIVO) * 100 : 0;
-            const PORCENTA_CARTERA_NDI_PROD = TOTAL_C_CREDITO_PRODUCTIVO !== 0 ? (CARTERA_NDI_C_PRODUCTIVO / TOTAL_C_CREDITO_PRODUCTIVO) * 100 : 0;
-            const PORCENTAJE_CARTERA_VENCIDA_PROD = TOTAL_C_CREDITO_PRODUCTIVO !== 0 ? (CARTERA_VENCIDA_C_PRODUCTIVO / TOTAL_C_CREDITO_PRODUCTIVO) * 100 : 0;
-            const PORCENTAJE_CARTERA_RIESGO_PROD = PORCENTA_CARTERA_NDI_PROD + PORCENTAJE_CARTERA_VENCIDA_PROD;
-
-            const PORCENTAJE_CARTERA_X_VENCER_IN_PUBLICO = TOTAL_C_DE_CREDITO_C_IN_PUBLICO !== 0 ? (CARTERA_X_VENCER_C_IN_PUBLICO / TOTAL_C_DE_CREDITO_C_IN_PUBLICO) * 100 : 0;
-            const PORCENTAJE_CARTERA_RIESGO_IN_PUBLICO = TOTAL_C_DE_CREDITO_C_IN_PUBLICO !== 0 ? (TOTAL_CARTERA_RIESGO_C_IN_PUBLICO / TOTAL_C_DE_CREDITO_C_IN_PUBLICO) * 100 : 0;
-            const PORCENTA_CARTERA_NDI_IN_PUBLICO = TOTAL_C_DE_CREDITO_C_IN_PUBLICO !== 0 ? (CARTERA_NDI_IN_PUBLICO / TOTAL_C_DE_CREDITO_C_IN_PUBLICO) * 100 : 0;
-            const PORCENTAJE_CARTERA_VENCIDA_IN_PUBLICO = TOTAL_C_DE_CREDITO_C_IN_PUBLICO !== 0 ? (CARTERA_VENCIDA_IN_PUBLICO / TOTAL_C_DE_CREDITO_C_IN_PUBLICO) * 100 : 0;
-            const CARTERA_INVERSIÓN_PÚBLICA = PORCENTAJE_CARTERA_X_VENCER_IN_PUBLICO + PORCENTAJE_CARTERA_RIESGO_IN_PUBLICO;
-
-            // Coberturas
-            const Porcentaje_Cartera_productivo = TOTAL_CARTERA_RIESGO_C_PRODUCTIVO !== 0 ? ((TOTAL_PROVISIONES_ESPECIFICAS_C_PRODUCTIVO + TOTAL_PROVISIÓN_GENÉRICA_C_PRODUCTIVO) / TOTAL_CARTERA_RIESGO_C_PRODUCTIVO * 100) : 0;
-            const Porcentaje_Cartera_Inv_Publico = TOTAL_CARTERA_RIESGO_C_IN_PUBLICO !== 0 ? ((TOTAL_PROVISIONES_ESPECIFICAS_C_IN_PUBLICO + TOTAL_PROVISIÓN_GENÉRICA_CREDITO_C_IN_PUBLICO) / TOTAL_CARTERA_RIESGO_C_IN_PUBLICO * 100) : 0;
-
-            // Cobertura total (simplificado)
-            const PROVISIONES_PARA_CRÉDITOS_INCOBRABLES = findByCode('1499');
-            const TOTAL_CARTERA_IMPRODUCTIVA = CARTERA_NDI_C_PRODUCTIVO + CARTERA_VENCIDA_C_PRODUCTIVO + CARTERA_NDI_IN_PUBLICO + CARTERA_VENCIDA_IN_PUBLICO;
-            const COBERTURA_TOTAL_CARTERA = TOTAL_CARTERA_IMPRODUCTIVA !== 0 ? (PROVISIONES_PARA_CRÉDITOS_INCOBRABLES / TOTAL_CARTERA_IMPRODUCTIVA) * -100 : 0;
-
+            // Fallback al archivo original
             return {
-                fecha,
-                TOTAL_C_CREDITO_PRODUCTIVO: TOTAL_C_CREDITO_PRODUCTIVO * 1000,
-                TOTAL_PROVISIONES_ESPECIFICAS_C_PRODUCTIVO: TOTAL_PROVISIONES_ESPECIFICAS_C_PRODUCTIVO * 1000,
-                TOTAL_PROVISIÓN_GENÉRICA_C_PRODUCTIVO: TOTAL_PROVISIÓN_GENÉRICA_C_PRODUCTIVO * 1000,
-                CARTERA_X_VENCER_C_PRODUCTIVO: CARTERA_X_VENCER_C_PRODUCTIVO * 1000,
-                TOTAL_CARTERA_RIESGO_C_PRODUCTIVO: TOTAL_CARTERA_RIESGO_C_PRODUCTIVO * 1000,
-                CARTERA_NDI_C_PRODUCTIVO: CARTERA_NDI_C_PRODUCTIVO * 1000,
-                CARTERA_VENCIDA_C_PRODUCTIVO: CARTERA_VENCIDA_C_PRODUCTIVO * 1000,
-
-                TOTAL_C_DE_CREDITO_C_IN_PUBLICO: TOTAL_C_DE_CREDITO_C_IN_PUBLICO * 1000,
-                TOTAL_PROVISIONES_ESPECIFICAS_C_IN_PUBLICO: TOTAL_PROVISIONES_ESPECIFICAS_C_IN_PUBLICO * 1000,
-                TOTAL_PROVISIÓN_GENÉRICA_CREDITO_C_IN_PUBLICO: TOTAL_PROVISIÓN_GENÉRICA_CREDITO_C_IN_PUBLICO * 1000,
-                CARTERA_X_VENCER_C_IN_PUBLICO: CARTERA_X_VENCER_C_IN_PUBLICO * 1000,
-                TOTAL_CARTERA_RIESGO_C_IN_PUBLICO: TOTAL_CARTERA_RIESGO_C_IN_PUBLICO * 1000,
-                CARTERA_NDI_IN_PUBLICO: CARTERA_NDI_IN_PUBLICO * 1000,
-                CARTERA_VENCIDA_IN_PUBLICO: CARTERA_VENCIDA_IN_PUBLICO * 1000,
-
-                PORCENTAJE_CARTERA_X_VENCER_PROD,
-                PORCENTAJE_CARTERA_RIESGO_PROD,
-                PORCENTA_CARTERA_NDI_PROD,
-                PORCENTAJE_CARTERA_VENCIDA_PROD,
-
-                CARTERA_INVERSIÓN_PÚBLICA,
-                PORCENTAJE_CARTERA_X_VENCER_IN_PUBLICO,
-                PORCENTAJE_CARTERA_RIESGO_IN_PUBLICO,
-                PORCENTA_CARTERA_NDI_IN_PUBLICO,
-                PORCENTAJE_CARTERA_VENCIDA_IN_PUBLICO,
-
-                Porcentaje_Cartera_productivo,
-                Porcentaje_Cartera_Inv_Publico,
-                COBERTURA_TOTAL_CARTERA,
-
-                Prov_Productivo: (findByCode('149905') / 1000) * -1,
-                Prov_Inv_Publica: (findByCode('149960') / 1000) * -1,
-                Prov_Refinanciada: (findByCode('149945') / 1000) * -1,
-                Prov_Reestructurada: (findByCode('149950') / 1000) * -1,
-                Prov_Anticiclica: (findByCode('149985') / 1000) * -1,
-                Prov_No_Normativo: (findByCode('149987') / 1000) * -1,
-                Prov_Voluntaria: (findByCode('149989') / 1000) * -1,
-                Prov_Incombrables: (findByCode('1499') / 1000) * -1
+                url: 'BDD/BANCO DE DESARROLLO DEL ECUADOR B.P. 2025_06.xlsx',
+                fecha: new Date(2025, 5, 1),
+                nombre: '2025_06'
             };
         }
 
-        function displayResults(results) {
-            const container = document.getElementById('tablesContainer');
-            const fechas = Object.keys(results).sort();
+        // Verificar si hay datos guardados localmente
+        function verificarDatosLocales() {
+            try {
+                const datosLocal = localStorage.getItem('bdd_datos_procesados');
+                const fechaLocal = localStorage.getItem('bdd_fecha_actualizacion');
+                
+                if (datosLocal && fechaLocal) {
+                    const fechaGuardada = new Date(fechaLocal);
+                    const ahora = new Date();
+                    const diferenciaDias = (ahora - fechaGuardada) / (1000 * 60 * 60 * 24);
+                    
+                    // Si los datos tienen menos de 7 días, usarlos
+                    if (diferenciaDias < 7) {
+                        console.log('Usando datos guardados localmente');
+                        return {
+                            datos: JSON.parse(datosLocal),
+                            fecha: fechaGuardada
+                        };
+                    }
+                }
+            } catch (error) {
+                console.log('No se pudieron cargar datos locales:', error);
+            }
+            return null;
+        }
+
+        // Guardar datos procesados localmente
+        function guardarDatosLocalmente(datos) {
+            try {
+                localStorage.setItem('bdd_datos_procesados', JSON.stringify(datos));
+                localStorage.setItem('bdd_fecha_actualizacion', new Date().toISOString());
+                console.log('Datos guardados localmente');
+            } catch (error) {
+                console.log('No se pudieron guardar datos localmente:', error);
+            }
+        }
+
+        // Mostrar información del archivo cargado
+        function mostrarInfoArchivo(nombreArchivo, fecha, esLocal = false) {
+            const infoPanel = document.querySelector('.info-panel');
+            const tipoFuente = esLocal ? 'Datos locales' : 'Datos del repositorio';
+            const fechaFormateada = fecha.toLocaleDateString('es-EC', { 
+                year: 'numeric', 
+                month: 'long' 
+            });
             
-            container.innerHTML = `
-                <div class="section-title">📊 COBERTURAS</div>
-                ${createTable('coberturas', [
-                    'COBERTURA CARTERA PRODUCTIVO (%)',
-                    'COBERTURA CARTERA INVERSIÓN PÚBLICA (%)',
-                    'COBERTURA TOTAL CARTERA (%)'
-                ], fechas, results, [
-                    'Porcentaje_Cartera_productivo',
-                    'Porcentaje_Cartera_Inv_Publico',
-                    'COBERTURA_TOTAL_CARTERA'
-                ], true)}
-
-                <div class="section-title">💰 CARTERA PRODUCTIVO</div>
-                ${createTable('productivo', [
-                    'Total Cartera de Crédito Productivo',
-                    'Total Provisiones Específicas C. Productivo',
-                    'Total Provisión Genérica C. Productivo',
-                    'Cartera por Vencer C. Productivo',
-                    'Total Cartera Riesgo C. Productivo',
-                    'Cartera NDI C. Productivo',
-                    'Cartera Vencida C. Productivo'
-                ], fechas, results, [
-                    'TOTAL_C_CREDITO_PRODUCTIVO',
-                    'TOTAL_PROVISIONES_ESPECIFICAS_C_PRODUCTIVO',
-                    'TOTAL_PROVISIÓN_GENÉRICA_C_PRODUCTIVO',
-                    'CARTERA_X_VENCER_C_PRODUCTIVO',
-                    'TOTAL_CARTERA_RIESGO_C_PRODUCTIVO',
-                    'CARTERA_NDI_C_PRODUCTIVO',
-                    'CARTERA_VENCIDA_C_PRODUCTIVO'
-                ], false)}
-
-                <div class="section-title">🏛️ CARTERA INVERSIÓN PÚBLICA</div>
-                ${createTable('inv-publica', [
-                    'Total Cartera de Crédito Inversión Publica',
-                    'Total Provisiones Específicas Inversión Publica',
-                    'Total Provisión Genérica Inversión Publica',
-                    'Cartera por Vencer Inversión Publica',
-                    'Total Cartera Riesgo Inversión Publica',
-                    'Cartera NDI Inversión Publica',
-                    'Cartera Vencida Inversión Publica'
-                ], fechas, results, [
-                    'TOTAL_C_DE_CREDITO_C_IN_PUBLICO',
-                    'TOTAL_PROVISIONES_ESPECIFICAS_C_IN_PUBLICO',
-                    'TOTAL_PROVISIÓN_GENÉRICA_CREDITO_C_IN_PUBLICO',
-                    'CARTERA_X_VENCER_C_IN_PUBLICO',
-                    'TOTAL_CARTERA_RIESGO_C_IN_PUBLICO',
-                    'CARTERA_NDI_IN_PUBLICO',
-                    'CARTERA_VENCIDA_IN_PUBLICO'
-                ], false)}
-
-                <div class="section-title">📈 INDICADORES PRODUCTIVO</div>
-                ${createTable('indicadores-prod', [
-                    'CARTERA PRODUCTIVO',
-                    'PORCENTAJE DE CARTERA POR VENCER',
-                    'PORCENTAJE DE CARTERA EN RIESGO',
-                    'PORCENTAJE DE CARTERA QUE NO DEVENGA INTERES',
-                    'PORCENTAJE DE CARTERA VENCIDA'
-                ], fechas, results, [
-                    'PORCENTAJE_CARTERA_X_VENCER_PROD',
-                    'PORCENTAJE_CARTERA_X_VENCER_PROD',
-                    'PORCENTAJE_CARTERA_RIESGO_PROD',
-                    'PORCENTA_CARTERA_NDI_PROD',
-                    'PORCENTAJE_CARTERA_VENCIDA_PROD'
-                ], true)}
-
-                <div class="section-title">📉 INDICADORES INVERSIÓN PÚBLICA</div>
-                ${createTable('indicadores-inv', [
-                    'CARTERA INVERSIÓN PÚBLICA',
-                    'PORCENTAJE DE CARTERA POR VENCER',
-                    'PORCENTAJE DE CARTERA EN RIESGO',
-                    'PORCENTA DE CARTERA QUE NO DEVENGA INTERES',
-                    'PORCENTAJE DE CARTERA VENCIDA'
-                ], fechas, results, [
-                    'CARTERA_INVERSIÓN_PÚBLICA',
-                    'PORCENTAJE_CARTERA_X_VENCER_IN_PUBLICO',
-                    'PORCENTAJE_CARTERA_RIESGO_IN_PUBLICO',
-                    'PORCENTA_CARTERA_NDI_IN_PUBLICO',
-                    'PORCENTAJE_CARTERA_VENCIDA_IN_PUBLICO'
-                ], true)}
-
-                <div class="section-title">💼 PROVISIONES</div>
-                ${createTable('provisiones', [
-                    'Productivo',
-                    'Inversión Publica',
-                    'Refinanciada',
-                    'Reestructurada',
-                    'Provisión Anticíclica',
-                    'Provisiones no reversadas por requerimiento normativo',
-                    'Provisión genérica voluntaria',
-                    'Provisiones para créditos incobrables'
-                ], fechas, results, [
-                    'Prov_Productivo',
-                    'Prov_Inv_Publica',
-                    'Prov_Refinanciada',
-                    'Prov_Reestructurada',
-                    'Prov_Anticiclica',
-                    'Prov_No_Normativo',
-                    'Prov_Voluntaria',
-                    'Prov_Incombrables'
-                ], false)}
+            infoPanel.innerHTML = `
+                <strong>Instrucciones:</strong>
+                <br>• Sube un archivo Excel actualizado o usa los datos detectados automáticamente
+                <br>• El sistema procesará automáticamente solo las fechas trimestrales que ya han ocurrido
+                <br>• Los cálculos incluyen cartera productiva, inversión pública, coberturas y provisiones
+                <br>• Ahora con carga flexible de datos sin rangos fijos
+                <br><br>
+                <strong>${tipoFuente}:</strong> ${nombreArchivo} (${fechaFormateada})
+                <br><strong>Estado:</strong> ${esLocal ? 'Datos en caché - Actualizados automáticamente cada 7 días' : 'Datos más recientes del repositorio'}
             `;
         }
 
-        function createTable(cssClass, concepts, fechas, results, fields, isPercentage) {
-            let html = `<div class="table-container">
-                <table class="${cssClass}">
-                    <thead>
-                        <tr>
-                            <th>Concepto</th>`;
-            
-            fechas.forEach(fecha => {
-                html += `<th>${fecha}</th>`;
+        // Mostrar información de archivo subido por el usuario
+        function mostrarInfoArchivoSubido(nombreArchivo, fecha) {
+            const infoPanel = document.querySelector('.info-panel');
+            const fechaFormateada = fecha.toLocaleDateString('es-EC', { 
+                year: 'numeric', 
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
             });
             
-            html += `</tr></thead><tbody>`;
-
-            concepts.forEach((concept, index) => {
-                html += `<tr><td class="concept-column">${concept}</td>`;
-                
-                fechas.forEach(fecha => {
-                    const value = results[fecha][fields[index]];
-                    const formattedValue = isPercentage ? 
-                        formatPercentage(value) : 
-                        formatCurrency(value);
-                    html += `<td class="number-column">${formattedValue}</td>`;
-                });
-                
-                html += `</tr>`;
-            });
-
-            html += `</tbody></table></div>`;
-            return html;
+            infoPanel.innerHTML = `
+                <strong>Instrucciones:</strong>
+                <br>• Sube un archivo Excel actualizado o usa los datos detectados automáticamente
+                <br>• El sistema procesará automáticamente solo las fechas trimestrales que ya han ocurrido
+                <br>• Los cálculos incluyen cartera productiva, inversión pública, coberturas y provisiones
+                <br>• Ahora con carga flexible de datos sin rangos fijos
+                <br><br>
+                <strong>Archivo subido por el usuario:</strong> ${nombreArchivo}
+                <br><strong>Procesado el:</strong> ${fechaFormateada}
+                <br><strong>Estado:</strong> Datos procesados desde archivo local subido
+            `;
         }
 
+        // Cargar datos por defecto con detección automática
+        async function cargarDatosPorDefecto() {
+            try {
+                // Mostrar carga inicial
+                const loadingDiv = document.getElementById('loading');
+                loadingDiv.style.display = 'block';
+                loadingDiv.innerHTML = `
+                    <div class="spinner"></div>
+                    <p><strong>Verificando datos locales...</strong></p>
+                `;
+                
+                // Primero verificar datos locales
+                const datosLocales = verificarDatosLocales();
+                if (datosLocales) {
+                    loadingDiv.innerHTML = `
+                        <div class="spinner"></div>
+                        <p><strong>Cargando datos guardados...</strong></p>
+                        <p>Usando caché local para acceso rápido</p>
+                    `;
+                    
+                    setTimeout(() => {
+                        processingData = datosLocales.datos;
+                        fechaUltimaActualizacion = datosLocales.fecha;
+                        mostrarResultados(processingData);
+                        mostrarInfoArchivo('Datos guardados', datosLocales.fecha, true);
+                        mostrarMensajeExito('Datos cargados desde caché local');
+                        origenDatos = 'cache_local';
+                    }, 500);
+                    return;
+                }
+
+                // Si no hay datos locales válidos, buscar en repositorio
+                loadingDiv.innerHTML = `
+                    <div class="spinner"></div>
+                    <p><strong>Detectando archivo más reciente...</strong></p>
+                    <p>Buscando en el repositorio...</p>
+                `;
+                
+                console.log('Detectando archivo más reciente...');
+                const archivoDetectado = await detectarArchivosDisponibles();
+                
+                loadingDiv.innerHTML = `
+                    <div class="spinner"></div>
+                    <p><strong>Descargando: ${archivoDetectado.nombre}</strong></p>
+                    <p>Cargando desde el repositorio...</p>
+                `;
+                
+                console.log(`Cargando: ${archivoDetectado.nombre}`);
+                const response = await fetch(archivoDetectado.url);
+                
+                if (!response.ok) {
+                    throw new Error(`No se pudo cargar el archivo: ${archivoDetectado.nombre}`);
+                }
+                
+                loadingDiv.innerHTML = `
+                    <div class="spinner"></div>
+                    <p><strong>Procesando datos con carga flexible...</strong></p>
+                    <p>Calculando indicadores trimestrales sin rangos fijos...</p>
+                `;
+                
+                const arrayBuffer = await response.arrayBuffer();
+                const workbook = XLSX.read(arrayBuffer);
+                const resultados = procesarWorkbook(workbook);
+                
+                if (resultados) {
+                    // Guardar datos localmente para próximas visitas
+                    guardarDatosLocalmente(resultados);
+                    fechaUltimaActualizacion = new Date();
+                    
+                    mostrarResultados(resultados);
+                    mostrarInfoArchivo(archivoDetectado.nombre, archivoDetectado.fecha, false);
+                    mostrarMensajeExito(`Datos cargados: ${archivoDetectado.nombre}`);
+                    origenDatos = 'repositorio';
+                }
+                
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                mostrarError('Error al cargar datos automáticamente: ' + error.message);
+            }
+        }
+
+        // Forzar actualización desde repositorio
+        async function forzarActualizacion() {
+            try {
+                // Mostrar estado de carga específico
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('results').style.display = 'none';
+                document.getElementById('exportSection').style.display = 'none';
+                
+                // Cambiar mensaje de carga
+                const loadingDiv = document.getElementById('loading');
+                loadingDiv.innerHTML = `
+                    <div class="spinner"></div>
+                    <p><strong>Buscando archivos más recientes...</strong></p>
+                    <p>Detectando automáticamente el Excel más actualizado del repositorio</p>
+                `;
+                
+                // Limpiar datos locales
+                localStorage.removeItem('bdd_datos_procesados');
+                localStorage.removeItem('bdd_fecha_actualizacion');
+                
+                // Mostrar progreso de detección
+                setTimeout(() => {
+                    loadingDiv.innerHTML = `
+                        <div class="spinner"></div>
+                        <p><strong>Descargando archivo detectado...</strong></p>
+                        <p>Cargando datos del repositorio con carga flexible</p>
+                    `;
+                }, 1000);
+                
+                // Recargar desde repositorio
+                console.log('Forzando actualización desde repositorio...');
+                const archivoDetectado = await detectarArchivosDisponibles();
+                
+                // Actualizar mensaje
+                loadingDiv.innerHTML = `
+                    <div class="spinner"></div>
+                    <p><strong>Procesando: ${archivoDetectado.nombre}</strong></p>
+                    <p>Calculando indicadores trimestrales sin rangos fijos...</p>
+                `;
+                
+                console.log(`Forzando carga de: ${archivoDetectado.nombre}`);
+                const response = await fetch(archivoDetectado.url);
+                
+                if (!response.ok) {
+                    throw new Error(`No se pudo cargar el archivo: ${archivoDetectado.nombre}`);
+                }
+                
+                const arrayBuffer = await response.arrayBuffer();
+                const workbook = XLSX.read(arrayBuffer);
+                const resultados = procesarWorkbook(workbook);
+                
+                if (resultados) {
+                    // Guardar datos localmente para próximas visitas
+                    guardarDatosLocalmente(resultados);
+                    fechaUltimaActualizacion = new Date();
+                    
+                    // Mostrar resultados
+                    mostrarResultados(resultados);
+                    
+                    // Mostrar mensaje de éxito
+                    mostrarMensajeExito(`Actualización completada: ${archivoDetectado.nombre}`);
+                    mostrarInfoArchivo(archivoDetectado.nombre, archivoDetectado.fecha, false);
+                    origenDatos = 'repositorio';
+                } else {
+                    throw new Error('Error al procesar los datos del archivo');
+                }
+                
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                mostrarError('Error al actualizar datos: ' + error.message);
+            }
+        }
+
+        // Generar vector de fechas desde 2003
+        function generarVectorFechas() {
+            const fechas = [];
+            let year = 2003;
+            let month = 1;
+            
+            // Generar suficientes fechas (hasta 2025 aproximadamente)
+            for (let i = 0; i < 275; i++) {
+                let day;
+                if (month === 2) {
+                    day = ((year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0)) ? 29 : 28;
+                } else if ([4, 6, 9, 11].includes(month)) {
+                    day = 30;
+                } else {
+                    day = 31;
+                }
+                
+                const dateStr = `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
+                fechas.push(dateStr);
+                
+                month++;
+                if (month > 12) {
+                    month = 1;
+                    year++;
+                }
+            }
+            return fechas;
+        }
+
+        // Generar fechas trimestrales dinámicamente basándose en datos disponibles
+        function generarFechasTrimestralesDisponibles(vectorFechas) {
+            const fechasTrimestrales = [];
+            const currentDate = new Date();
+            const currentYear = currentDate.getFullYear();
+            const currentMonth = currentDate.getMonth() + 1; // getMonth() retorna 0-11
+            
+            // Generar fechas desde 2022 hasta el año actual
+            for (let year = 2022; year <= currentYear; year++) {
+                const trimestres = [
+                    { mes: 3, dia: 31, fecha: `31/03/${year}` },
+                    { mes: 6, dia: 30, fecha: `30/06/${year}` },
+                    { mes: 9, dia: 30, fecha: `30/09/${year}` },
+                    { mes: 12, dia: 31, fecha: `31/12/${year}` }
+                ];
+                
+                for (let trimestre of trimestres) {
+                    // Solo incluir fechas que ya han pasado o están en el mes actual
+                    if (year < currentYear || 
+                        (year === currentYear && trimestre.mes <= currentMonth)) {
+                        
+                        // Verificar si la fecha existe en los datos
+                        if (vectorFechas.includes(trimestre.fecha)) {
+                            fechasTrimestrales.push(trimestre.fecha);
+                        }
+                    }
+                }
+            }
+            
+            return fechasTrimestrales;
+        }
+
+        // Procesar archivo Excel con carga flexible - SOLO PARA REPOSITORIO
+        function procesarWorkbook(workbook) {
+            try {
+                // Buscar hoja principal (puede ser "BAL" o la primera hoja)
+                let mainSheetName = 'BAL';
+                if (!workbook.Sheets[mainSheetName]) {
+                    mainSheetName = workbook.SheetNames[0];
+                }
+                
+                const mainSheet = workbook.Sheets[mainSheetName];
+                const indicSheet = workbook.Sheets['INDIC CARTERA'];
+                
+                if (!mainSheet || !indicSheet) {
+                    throw new Error(`No se encontraron las hojas requeridas en el archivo. Hojas disponibles: ${workbook.SheetNames.join(', ')}`);
+                }
+
+                // Obtener datos en formato JSON desde fila 5 (skip = 4) - CARGA FLEXIBLE
+                const mainData = XLSX.utils.sheet_to_json(mainSheet, { 
+                    header: 1,
+                    range: 4  // Empezar desde fila 5 (índice 4), sin límite de columnas
+                });
+                
+                const indicData = XLSX.utils.sheet_to_json(indicSheet, { 
+                    header: 1,
+                    range: 4  // Empezar desde fila 5 (índice 4), sin límite de columnas
+                });
+
+                // Procesar datos
+                const resultados = procesarDatos(mainData, indicData);
+                
+                return resultados; // Retornar para poder guardar
+                
+            } catch (error) {
+                mostrarError('Error al procesar archivo: ' + error.message);
+                return null;
+            }
+        }
+
+        // Procesar datos principales con carga flexible
+        function procesarDatos(mainData, indicData) {
+            // Aplicar nombres de columnas
+            const vectorFechas = generarVectorFechas();
+            
+            // Generar fechas trimestrales dinámicamente basándose en datos disponibles
+            fechasTrimestrales = generarFechasTrimestralesDisponibles(vectorFechas);
+
+            // Procesar datos principales - CARGA FLEXIBLE (desde fila 1, ya que sheet_to_json con range: 4 ya saltó las primeras 4 filas)
+            const datosMain = mainData.map(row => {
+                if (!row || row.length < 3) return null; // Filtrar filas vacías
+                
+                const codigo = row[0];
+                const cuenta = row[1];
+                const valores = {};
+                
+                // Procesar todas las columnas disponibles (carga flexible)
+                for (let i = 2; i < row.length && i - 2 < vectorFechas.length; i++) {
+                    const fecha = vectorFechas[i - 2];
+                    valores[fecha] = parseFloat(row[i]) || 0;
+                }
+                
+                return { codigo, cuenta, valores };
+            }).filter(row => row && row.codigo); // Filtrar nulls y filas sin código
+
+            // Procesar datos de indicadores - CARGA FLEXIBLE
+            const datosIndic = indicData.map(row => {
+                if (!row || row.length < 4) return null; // Filtrar filas vacías
+                
+                const item = row[0];
+                const formula = row[1];
+                const variables = row[2];
+                const valores = {};
+                
+                // Procesar todas las columnas disponibles (carga flexible)
+                for (let i = 3; i < row.length && i - 3 < vectorFechas.length; i++) {
+                    const fecha = vectorFechas[i - 3];
+                    valores[fecha] = parseFloat(row[i]) || 0;
+                }
+                
+                return { item, formula, variables, valores };
+            }).filter(row => row && row.item); // Filtrar nulls y filas sin item
+
+            // Procesar cada fecha trimestral disponible
+            const resultados = {};
+            
+            fechasTrimestrales.forEach(fecha => {
+                const resultado = procesarFechaTrimestral(fecha, datosMain, datosIndic);
+                if (resultado) {
+                    resultados[fecha] = resultado;
+                }
+            });
+
+            return resultados;
+        }
+
+        // Procesar una fecha trimestral específica
+        function procesarFechaTrimestral(fecha, datosMain, datosIndic) {
+            // Buscar datos para la fecha específica
+            const getValor = (codigo, datos) => {
+                const registro = datos.find(d => d.codigo == codigo);
+                return registro ? (registro.valores[fecha] || 0) : 0;
+            };
+
+            const getValorIndic = (item, datos) => {
+                const registro = datos.find(d => d.item === item);
+                return registro ? (registro.valores[fecha] || 0) : 0;
+            };
+
+            // SEGMENTO PRODUCTIVO
+            const TOTAL_C_CREDITO_PRODUCTIVO = [1401, 1409, 1417, 1425, 1433, 1441, 1449, 1457, 1465]
+                .reduce((sum, codigo) => sum + getValor(codigo, datosMain), 0);
+
+            const TOTAL_PROVISIONES_ESPECIFICAS_C_PRODUCTIVO = 
+                -getValor(149905, datosMain) + getValor(741401, datosMain) + getValor(741409, datosMain);
+
+            const TOTAL_PROVISIÓN_GENÉRICA_C_PRODUCTIVO = getValor(741420, datosMain);
+
+            const CARTERA_X_VENCER_C_PRODUCTIVO = [1401, 1409, 1417, 149105, 149405]
+                .reduce((sum, codigo) => sum + getValor(codigo, datosMain), 0);
+
+            const TOTAL_CARTERA_RIESGO_C_PRODUCTIVO = [1425, 1433, 1441, 1449, 1457, 1465]
+                .reduce((sum, codigo) => sum + getValor(codigo, datosMain), 0);
+
+            const CARTERA_NDI_C_PRODUCTIVO = [1425, 1433, 1441, 149205, 149505]
+                .reduce((sum, codigo) => sum + getValor(codigo, datosMain), 0);
+
+            const CARTERA_VENCIDA_C_PRODUCTIVO = [1449, 1457, 1465, 149305, 149605]
+                .reduce((sum, codigo) => sum + getValor(codigo, datosMain), 0);
+
+            // SEGMENTO INVERSIÓN PÚBLICA
+            const TOTAL_C_DE_CREDITO_C_IN_PUBLICO = [1474, 1476, 1478, 1480, 1482, 1484, 1486, 1488, 1490, 1491, 1492, 1493, 1494, 1495, 1496]
+                .reduce((sum, codigo) => sum + getValor(codigo, datosMain), 0);
+
+            const TOTAL_PROVISIONES_ESPECIFICAS_C_IN_PUBLICO = 
+                -getValor(149960, datosMain) + getValor(741433, datosMain) + getValor(741437, datosMain);
+
+            const TOTAL_PROVISIÓN_GENÉRICA_CREDITO_C_IN_PUBLICO = getValor(741442, datosMain);
+
+            const CARTERA_X_VENCER_C_IN_PUBLICO = [1474, 1476, 1478, 1491, 1494]
+                .reduce((sum, codigo) => sum + getValor(codigo, datosMain), 0);
+
+            const TOTAL_CARTERA_RIESGO_C_IN_PUBLICO = [1480, 1482, 1484, 1486, 1488, 1490, 149245, 149345, 149545, 149645]
+                .reduce((sum, codigo) => sum + getValor(codigo, datosMain), 0);
+
+            const CARTERA_NDI_IN_PUBLICO = [1480, 1482, 1484, 149545, 149245]
+                .reduce((sum, codigo) => sum + getValor(codigo, datosMain), 0);
+
+            const CARTERA_VENCIDA_IN_PUBLICO = [1486, 1488, 1490, 149345, 149645]
+                .reduce((sum, codigo) => sum + getValor(codigo, datosMain), 0);
+
+            // CÁLCULOS DE PORCENTAJES
+            const PORCENTAJE_CARTERA_X_VENCER_PROD = TOTAL_C_CREDITO_PRODUCTIVO !== 0 ? 
+                (CARTERA_X_VENCER_C_PRODUCTIVO / TOTAL_C_CREDITO_PRODUCTIVO) * 100 : 0;
+
+            const PORCENTA_CARTERA_NDI_PROD = TOTAL_C_CREDITO_PRODUCTIVO !== 0 ? 
+                (CARTERA_NDI_C_PRODUCTIVO / TOTAL_C_CREDITO_PRODUCTIVO) * 100 : 0;
+
+            const PORCENTAJE_CARTERA_VENCIDA_PROD = TOTAL_C_CREDITO_PRODUCTIVO !== 0 ? 
+                (CARTERA_VENCIDA_C_PRODUCTIVO / TOTAL_C_CREDITO_PRODUCTIVO) * 100 : 0;
+
+            const PORCENTAJE_CARTERA_RIESGO_PROD = PORCENTA_CARTERA_NDI_PROD + PORCENTAJE_CARTERA_VENCIDA_PROD;
+
+            const PORCENTAJE_CARTERA_X_VENCER_IN_PUBLICO = TOTAL_C_DE_CREDITO_C_IN_PUBLICO !== 0 ? 
+                (CARTERA_X_VENCER_C_IN_PUBLICO / TOTAL_C_DE_CREDITO_C_IN_PUBLICO) * 100 : 0;
+
+            const PORCENTAJE_CARTERA_RIESGO_IN_PUBLICO = TOTAL_C_DE_CREDITO_C_IN_PUBLICO !== 0 ? 
+                (TOTAL_CARTERA_RIESGO_C_IN_PUBLICO / TOTAL_C_DE_CREDITO_C_IN_PUBLICO) * 100 : 0;
+
+            const PORCENTA_CARTERA_NDI_IN_PUBLICO = TOTAL_C_DE_CREDITO_C_IN_PUBLICO !== 0 ? 
+                (CARTERA_NDI_IN_PUBLICO / TOTAL_C_DE_CREDITO_C_IN_PUBLICO) * 100 : 0;
+
+            const PORCENTAJE_CARTERA_VENCIDA_IN_PUBLICO = TOTAL_C_DE_CREDITO_C_IN_PUBLICO !== 0 ? 
+                (CARTERA_VENCIDA_IN_PUBLICO / TOTAL_C_DE_CREDITO_C_IN_PUBLICO) * 100 : 0;
+
+            const CARTERA_INVERSIÓN_PÚBLICA = PORCENTAJE_CARTERA_X_VENCER_IN_PUBLICO + PORCENTAJE_CARTERA_RIESGO_IN_PUBLICO;
+
+            // COBERTURAS
+            const Porcentaje_Cartera_productivo = TOTAL_CARTERA_RIESGO_C_PRODUCTIVO !== 0 ? 
+                ((TOTAL_PROVISIONES_ESPECIFICAS_C_PRODUCTIVO + TOTAL_PROVISIÓN_GENÉRICA_C_PRODUCTIVO) / TOTAL_CARTERA_RIESGO_C_PRODUCTIVO * 100) : 0;
+
+            const Porcentaje_Cartera_Inv_Publico = TOTAL_CARTERA_RIESGO_C_IN_PUBLICO !== 0 ? 
+                ((TOTAL_PROVISIONES_ESPECIFICAS_C_IN_PUBLICO + TOTAL_PROVISIÓN_GENÉRICA_CREDITO_C_IN_PUBLICO) / TOTAL_CARTERA_RIESGO_C_IN_PUBLICO * 100) : 0;
+
+            const PROVISIONES_PARA_CRÉDITOS_INCOBRABLES = getValor(1499, datosMain);
+            const TOTAL_CARTERA_IMPRODUCTIVA = getValorIndic("(aw)", datosIndic);
+            const COBERTURA_TOTAL_CARTERA = TOTAL_CARTERA_IMPRODUCTIVA !== 0 ? 
+                (PROVISIONES_PARA_CRÉDITOS_INCOBRABLES / TOTAL_CARTERA_IMPRODUCTIVA) * -100 : 0;
+
+            // PROVISIONES
+            const Prov_Productivo = (-getValor(149905, datosMain) / 1000);
+            const Prov_Inv_Publica = (-getValor(149960, datosMain) / 1000);
+            const Prov_Refinanciada = (-getValor(149945, datosMain) / 1000);
+            const Prov_Reestructurada = (-getValor(149950, datosMain) / 1000);
+            const Prov_Anticiclica = (-getValor(149985, datosMain) / 1000);
+            const Prov_No_Normativo = (-getValor(149987, datosMain) / 1000);
+            const Prov_Voluntaria = (-getValor(149989, datosMain) / 1000);
+            const Prov_Incombrables = (-getValor(1499, datosMain) / 1000);
+
+            return {
+                fecha,
+                cartera_productivo: {
+                    TOTAL_C_CREDITO_PRODUCTIVO: TOTAL_C_CREDITO_PRODUCTIVO * 1000,
+                    TOTAL_PROVISIONES_ESPECIFICAS_C_PRODUCTIVO: TOTAL_PROVISIONES_ESPECIFICAS_C_PRODUCTIVO * 1000,
+                    TOTAL_PROVISIÓN_GENÉRICA_C_PRODUCTIVO: TOTAL_PROVISIÓN_GENÉRICA_C_PRODUCTIVO * 1000,
+                    CARTERA_X_VENCER_C_PRODUCTIVO: CARTERA_X_VENCER_C_PRODUCTIVO * 1000,
+                    TOTAL_CARTERA_RIESGO_C_PRODUCTIVO: TOTAL_CARTERA_RIESGO_C_PRODUCTIVO * 1000,
+                    CARTERA_NDI_C_PRODUCTIVO: CARTERA_NDI_C_PRODUCTIVO * 1000,
+                    CARTERA_VENCIDA_C_PRODUCTIVO: CARTERA_VENCIDA_C_PRODUCTIVO * 1000
+                },
+                cartera_inv_publica: {
+                    TOTAL_C_DE_CREDITO_C_IN_PUBLICO: TOTAL_C_DE_CREDITO_C_IN_PUBLICO * 1000,
+                    TOTAL_PROVISIONES_ESPECIFICAS_C_IN_PUBLICO: TOTAL_PROVISIONES_ESPECIFICAS_C_IN_PUBLICO * 1000,
+                    TOTAL_PROVISIÓN_GENÉRICA_CREDITO_C_IN_PUBLICO: TOTAL_PROVISIÓN_GENÉRICA_CREDITO_C_IN_PUBLICO * 1000,
+                    CARTERA_X_VENCER_C_IN_PUBLICO: CARTERA_X_VENCER_C_IN_PUBLICO * 1000,
+                    TOTAL_CARTERA_RIESGO_C_IN_PUBLICO: TOTAL_CARTERA_RIESGO_C_IN_PUBLICO * 1000,
+                    CARTERA_NDI_IN_PUBLICO: CARTERA_NDI_IN_PUBLICO * 1000,
+                    CARTERA_VENCIDA_IN_PUBLICO: CARTERA_VENCIDA_IN_PUBLICO * 1000
+                },
+                indicadores_productivo: {
+                    CARTERA_PRODUCTIVO: PORCENTAJE_CARTERA_X_VENCER_PROD,
+                    PORCENTAJE_CARTERA_X_VENCER: PORCENTAJE_CARTERA_X_VENCER_PROD,
+                    PORCENTAJE_CARTERA_RIESGO: PORCENTAJE_CARTERA_RIESGO_PROD,
+                    PORCENTAJE_CARTERA_NDI: PORCENTA_CARTERA_NDI_PROD,
+                    PORCENTAJE_CARTERA_VENCIDA: PORCENTAJE_CARTERA_VENCIDA_PROD
+                },
+                indicadores_inv_publica: {
+                    CARTERA_INVERSIÓN_PÚBLICA: CARTERA_INVERSIÓN_PÚBLICA,
+                    PORCENTAJE_CARTERA_X_VENCER: PORCENTAJE_CARTERA_X_VENCER_IN_PUBLICO,
+                    PORCENTAJE_CARTERA_RIESGO: PORCENTAJE_CARTERA_RIESGO_IN_PUBLICO,
+                    PORCENTAJE_CARTERA_NDI: PORCENTA_CARTERA_NDI_IN_PUBLICO,
+                    PORCENTAJE_CARTERA_VENCIDA: PORCENTAJE_CARTERA_VENCIDA_IN_PUBLICO
+                },
+                coberturas: {
+                    COBERTURA_CARTERA_PRODUCTIVO: Porcentaje_Cartera_productivo,
+                    COBERTURA_CARTERA_INVERSIÓN_PÚBLICA: Porcentaje_Cartera_Inv_Publico,
+                    COBERTURA_TOTAL_CARTERA: COBERTURA_TOTAL_CARTERA
+                },
+                provisiones: {
+                    Productivo: Prov_Productivo,
+                    Inversión_Publica: Prov_Inv_Publica,
+                    Refinanciada: Prov_Refinanciada,
+                    Reestructurada: Prov_Reestructurada,
+                    Provisión_Anticíclica: Prov_Anticiclica,
+                    Provisiones_no_reversadas: Prov_No_Normativo,
+                    Provisión_genérica_voluntaria: Prov_Voluntaria,
+                    Provisiones_para_créditos_incobrables: Prov_Incombrables
+                }
+            };
+        }
+
+        // Mostrar resultados en tablas
+        function mostrarResultados(resultados) {
+            processingData = resultados;
+            
+            // Restablecer mensaje de carga original
+            const loadingDiv = document.getElementById('loading');
+            loadingDiv.innerHTML = `
+                <div class="spinner"></div>
+                <p>Procesando datos... Por favor espera.</p>
+            `;
+            
+            // Crear estructuras de datos para las tablas
+            const fechas = Object.keys(resultados);
+            
+            // Crear tabla de coberturas
+            const coberturasData = [
+                ['COBERTURA CARTERA PRODUCTIVO (%)'].concat(fechas.map(function(f) { return resultados[f].coberturas.COBERTURA_CARTERA_PRODUCTIVO; })),
+                ['COBERTURA CARTERA INVERSIÓN PÚBLICA (%)'].concat(fechas.map(function(f) { return resultados[f].coberturas.COBERTURA_CARTERA_INVERSIÓN_PUBLICA; })),
+                ['COBERTURA TOTAL CARTERA (%)'].concat(fechas.map(function(f) { return resultados[f].coberturas.COBERTURA_TOTAL_CARTERA; }))
+            ];
+            
+            // Crear tabla de cartera productivo
+            const productivoData = [
+                ['Total Cartera de Crédito Productivo'].concat(fechas.map(function(f) { return resultados[f].cartera_productivo.TOTAL_C_CREDITO_PRODUCTIVO; })),
+                ['Total Provisiones Específicas C. Productivo'].concat(fechas.map(function(f) { return resultados[f].cartera_productivo.TOTAL_PROVISIONES_ESPECIFICAS_C_PRODUCTIVO; })),
+                ['Total Provisión Genérica C. Productivo'].concat(fechas.map(function(f) { return resultados[f].cartera_productivo.TOTAL_PROVISIÓN_GENÉRICA_C_PRODUCTIVO; })),
+                ['Cartera por Vencer C. Productivo'].concat(fechas.map(function(f) { return resultados[f].cartera_productivo.CARTERA_X_VENCER_C_PRODUCTIVO; })),
+                ['Total Cartera Riesgo C. Productivo'].concat(fechas.map(function(f) { return resultados[f].cartera_productivo.TOTAL_CARTERA_RIESGO_C_PRODUCTIVO; })),
+                ['Cartera NDI C. Productivo'].concat(fechas.map(function(f) { return resultados[f].cartera_productivo.CARTERA_NDI_C_PRODUCTIVO; })),
+                ['Cartera Vencida C. Productivo'].concat(fechas.map(function(f) { return resultados[f].cartera_productivo.CARTERA_VENCIDA_C_PRODUCTIVO; }))
+            ];
+            
+            // Crear tabla de cartera inversión pública
+            const invPublicaData = [
+                ['Total Cartera de Crédito Inversión Publica'].concat(fechas.map(function(f) { return resultados[f].cartera_inv_publica.TOTAL_C_DE_CREDITO_C_IN_PUBLICO; })),
+                ['Total Provisiones Específicas Inversión Publica'].concat(fechas.map(function(f) { return resultados[f].cartera_inv_publica.TOTAL_PROVISIONES_ESPECIFICAS_C_IN_PUBLICO; })),
+                ['Total Provisión Genérica Inversión Publica'].concat(fechas.map(function(f) { return resultados[f].cartera_inv_publica.TOTAL_PROVISIÓN_GENÉRICA_CREDITO_C_IN_PUBLICO; })),
+                ['Cartera por Vencer Inversión Publica'].concat(fechas.map(function(f) { return resultados[f].cartera_inv_publica.CARTERA_X_VENCER_C_IN_PUBLICO; })),
+                ['Total Cartera Riesgo Inversión Publica'].concat(fechas.map(function(f) { return resultados[f].cartera_inv_publica.TOTAL_CARTERA_RIESGO_C_IN_PUBLICO; })),
+                ['Cartera NDI Inversión Publica'].concat(fechas.map(function(f) { return resultados[f].cartera_inv_publica.CARTERA_NDI_IN_PUBLICO; })),
+                ['Cartera Vencida Inversión Publica'].concat(fechas.map(function(f) { return resultados[f].cartera_inv_publica.CARTERA_VENCIDA_IN_PUBLICO; }))
+            ];
+            
+            // Crear tabla de indicadores productivo
+            const indicadoresProductivoData = [
+                ['CARTERA PRODUCTIVO'].concat(fechas.map(function(f) { return resultados[f].indicadores_productivo.CARTERA_PRODUCTIVO; })),
+                ['PORCENTAJE DE CARTERA POR VENCER'].concat(fechas.map(function(f) { return resultados[f].indicadores_productivo.PORCENTAJE_CARTERA_X_VENCER; })),
+                ['PORCENTAJE DE CARTERA EN RIESGO'].concat(fechas.map(function(f) { return resultados[f].indicadores_productivo.PORCENTAJE_CARTERA_RIESGO; })),
+                ['PORCENTAJE DE CARTERA QUE NO DEVENGA INTERES'].concat(fechas.map(function(f) { return resultados[f].indicadores_productivo.PORCENTAJE_CARTERA_NDI; })),
+                ['PORCENTAJE DE CARTERA VENCIDA'].concat(fechas.map(function(f) { return resultados[f].indicadores_productivo.PORCENTAJE_CARTERA_VENCIDA; }))
+            ];
+            
+            // Crear tabla de indicadores inversión pública
+            const indicadoresInvData = [
+                ['CARTERA INVERSIÓN PÚBLICA'].concat(fechas.map(function(f) { return resultados[f].indicadores_inv_publica.CARTERA_INVERSIÓN_PÚBLICA; })),
+                ['PORCENTAJE DE CARTERA POR VENCER'].concat(fechas.map(function(f) { return resultados[f].indicadores_inv_publica.PORCENTAJE_CARTERA_X_VENCER; })),
+                ['PORCENTAJE DE CARTERA EN RIESGO'].concat(fechas.map(function(f) { return resultados[f].indicadores_inv_publica.PORCENTAJE_CARTERA_RIESGO; })),
+                ['PORCENTA DE CARTERA QUE NO DEVENGA INTERES'].concat(fechas.map(function(f) { return resultados[f].indicadores_inv_publica.PORCENTAJE_CARTERA_NDI; })),
+                ['PORCENTAJE DE CARTERA VENCIDA'].concat(fechas.map(function(f) { return resultados[f].indicadores_inv_publica.PORCENTAJE_CARTERA_VENCIDA; }))
+            ];
+            
+            // Crear tabla de provisiones (CORREGIDO)
+            const provisionesData = [
+                ['Productivo'].concat(fechas.map(function(f) { return resultados[f].provisiones.Productivo; })),
+                ['Inversión Publica'].concat(fechas.map(function(f) { return resultados[f].provisiones.Inversión_Publica; })),
+                ['Refinanciada'].concat(fechas.map(function(f) { return resultados[f].provisiones.Refinanciada; })),
+                ['Reestructurada'].concat(fechas.map(function(f) { return resultados[f].provisiones.Reestructurada; })),
+                ['Provisión Anticíclica'].concat(fechas.map(function(f) { return resultados[f].provisiones.Provisión_Anticíclica; })),
+                ['Provisiones no reversadas por requerimiento normativo'].concat(fechas.map(function(f) { return resultados[f].provisiones.Provisiones_no_reversadas; })),
+                ['Provisión genérica voluntaria'].concat(fechas.map(function(f) { return resultados[f].provisiones.Provisión_genérica_voluntaria; })),
+                ['Provisiones para créditos incobrables'].concat(fechas.map(function(f) { return resultados[f].provisiones.Provisiones_para_créditos_incobrables; }))
+            ];
+            
+            // Generar las tablas HTML
+            generarTabla('coberturasTable', coberturasData, fechas, 'cobertura-row', 'percentage');
+            generarTabla('productivoTable', productivoData, fechas, 'productivo-row', 'currency');
+            generarTabla('invPublicaTable', invPublicaData, fechas, 'inv-publica-row', 'currency');
+            generarTabla('indicadoresProductivoTable', indicadoresProductivoData, fechas, 'indicadores-prod-row', 'percentage');
+            generarTabla('indicadoresInvTable', indicadoresInvData, fechas, 'indicadores-inv-row', 'percentage');
+            generarTabla('provisionesTable', provisionesData, fechas, 'provisiones-row', 'currency');
+            
+            // Mostrar resultados y botón de exportar
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('exportSection').style.display = 'block';
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        // Generar tabla HTML
+        function generarTabla(tableId, data, fechas, rowClass, format) {
+            const table = document.getElementById(tableId);
+            table.innerHTML = '';
+            
+            // Crear encabezado
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            
+            const conceptoHeader = document.createElement('th');
+            conceptoHeader.textContent = 'Concepto';
+            headerRow.appendChild(conceptoHeader);
+            
+            fechas.forEach(function(fecha) {
+                const th = document.createElement('th');
+                th.textContent = fecha;
+                headerRow.appendChild(th);
+            });
+            
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+            
+            // Crear cuerpo de la tabla
+            const tbody = document.createElement('tbody');
+            
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = rowClass;
+                
+                row.forEach((cell, index) => {
+                    const td = document.createElement('td');
+                    
+                    if (index === 0) {
+                        td.textContent = cell;
+                    } else {
+                        const value = parseFloat(cell);
+                        if (format === 'currency') {
+                            td.textContent = formatCurrency(value);
+                        } else if (format === 'percentage') {
+                            td.textContent = formatPercentage(value);
+                        } else {
+                            td.textContent = formatNumber(value);
+                        }
+                    }
+                    
+                    tr.appendChild(td);
+                });
+                
+                tbody.appendChild(tr);
+            });
+            
+            table.appendChild(tbody);
+        }
+
+        // Funciones de formato
         function formatCurrency(value) {
-            if (value === null || value === undefined || isNaN(value)) return '$0.00';
-            return new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD',
+            return new Intl.NumberFormat('es-EC', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             }).format(value);
         }
 
         function formatPercentage(value) {
-            if (value === null || value === undefined || isNaN(value)) return '0.00%';
-            return new Intl.NumberFormat('en-US', {
-                style: 'percent',
+            return new Intl.NumberFormat('es-EC', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
-            }).format(value / 100);
+            }).format(value) + '%';
         }
 
-        function downloadExcel() {
-            if (!processedResults) {
-                showError('No hay datos para descargar');
+        function formatNumber(value) {
+            return new Intl.NumberFormat('es-EC', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(value);
+        }
+
+        // Exportar a Excel con formato profesional usando ExcelJS
+        async function exportarExcel() {
+            if (!processingData) {
+                alert('No hay datos para exportar');
                 return;
             }
 
-            try {
-                // Crear workbook
-                const wb = XLSX.utils.book_new();
-                const fechas = Object.keys(processedResults).sort();
+            // Mostrar información sobre qué datos se están exportando
+            let tituloExportacion = '';
+            if (origenDatos === 'archivo_subido') {
+                tituloExportacion = 'Exportando datos de tu archivo subido...';
+            } else if (origenDatos === 'cache_local') {
+                tituloExportacion = 'Exportando datos desde cache local...';
+            } else {
+                tituloExportacion = 'Exportando datos del repositorio...';
+            }
+            
+            console.log(tituloExportacion);
+            console.log('Origen de los datos:', origenDatos);
+            console.log('Fechas a exportar:', Object.keys(processingData));
 
-                // Crear datos integrados
-                const integratedData = [];
+            const fechas = Object.keys(processingData);
+            
+            // Crear workbook con ExcelJS
+            const workbook = new ExcelJS.Workbook();
+            workbook.creator = `Sistema BDD - Origen: ${origenDatos}`;
+            workbook.lastModifiedBy = 'Sistema BDD';
+            workbook.created = new Date();
+            workbook.modified = new Date();
+            workbook.lastPrinted = new Date();
 
-                // Sección Coberturas
-                integratedData.push(['SECCIÓN', 'CONCEPTO', ...fechas]);
-                integratedData.push(['📊 COBERTURAS', '', '','','']);
-                integratedData.push(['', 'COBERTURA CARTERA PRODUCTIVO (%)', ...fechas.map(f => processedResults[f].Porcentaje_Cartera_productivo)]);
-                integratedData.push(['', 'COBERTURA CARTERA INVERSIÓN PÚBLICA (%)', ...fechas.map(f => processedResults[f].Porcentaje_Cartera_Inv_Publico)]);
-                integratedData.push(['', 'COBERTURA TOTAL CARTERA (%)', ...fechas.map(f => processedResults[f].COBERTURA_TOTAL_CARTERA)]);
-                integratedData.push(['', '', '','','']); // Separador
+            // Crear hoja principal
+            const worksheet = workbook.addWorksheet('Reporte Consolidado Trimestral');
 
-                // Sección Cartera Productivo
-                integratedData.push(['💰 CARTERA PRODUCTIVO', '', '','','']);
-                integratedData.push(['', 'Total Cartera de Crédito Productivo', ...fechas.map(f => processedResults[f].TOTAL_C_CREDITO_PRODUCTIVO)]);
-                integratedData.push(['', 'Total Provisiones Específicas C. Productivo', ...fechas.map(f => processedResults[f].TOTAL_PROVISIONES_ESPECIFICAS_C_PRODUCTIVO)]);
-                integratedData.push(['', 'Total Provisión Genérica C. Productivo', ...fechas.map(f => processedResults[f].TOTAL_PROVISIÓN_GENÉRICA_C_PRODUCTIVO)]);
-                integratedData.push(['', 'Cartera por Vencer C. Productivo', ...fechas.map(f => processedResults[f].CARTERA_X_VENCER_C_PRODUCTIVO)]);
-                integratedData.push(['', 'Total Cartera Riesgo C. Productivo', ...fechas.map(f => processedResults[f].TOTAL_CARTERA_RIESGO_C_PRODUCTIVO)]);
-                integratedData.push(['', 'Cartera NDI C. Productivo', ...fechas.map(f => processedResults[f].CARTERA_NDI_C_PRODUCTIVO)]);
-                integratedData.push(['', 'Cartera Vencida C. Productivo', ...fechas.map(f => processedResults[f].CARTERA_VENCIDA_C_PRODUCTIVO)]);
-                integratedData.push(['', '', '','','']); // Separador
+            // Configurar columnas
+            const columns = [];
+            columns.push({ width: 45 }); // Columna de conceptos
+            fechas.forEach(function() {
+                columns.push({ width: 18 }); // Columnas de fechas
+            });
+            worksheet.columns = columns;
 
-                // Sección Cartera Inversión Pública
-                integratedData.push(['🏛️ CARTERA INVERSIÓN PÚBLICA', '', '','','']);
-                integratedData.push(['', 'Total Cartera de Crédito Inversión Publica', ...fechas.map(f => processedResults[f].TOTAL_C_DE_CREDITO_C_IN_PUBLICO)]);
-                integratedData.push(['', 'Total Provisiones Específicas Inversión Publica', ...fechas.map(f => processedResults[f].TOTAL_PROVISIONES_ESPECIFICAS_C_IN_PUBLICO)]);
-                integratedData.push(['', 'Total Provisión Genérica Inversión Publica', ...fechas.map(f => processedResults[f].TOTAL_PROVISIÓN_GENÉRICA_CREDITO_C_IN_PUBLICO)]);
-                integratedData.push(['', 'Cartera por Vencer Inversión Publica', ...fechas.map(f => processedResults[f].CARTERA_X_VENCER_C_IN_PUBLICO)]);
-                integratedData.push(['', 'Total Cartera Riesgo Inversión Publica', ...fechas.map(f => processedResults[f].TOTAL_CARTERA_RIESGO_C_IN_PUBLICO)]);
-                integratedData.push(['', 'Cartera NDI Inversión Publica', ...fechas.map(f => processedResults[f].CARTERA_NDI_IN_PUBLICO)]);
-                integratedData.push(['', 'Cartera Vencida Inversión Publica', ...fechas.map(f => processedResults[f].CARTERA_VENCIDA_IN_PUBLICO)]);
-                integratedData.push(['', '', '','','']); // Separador
+            let currentRow = 1;
 
-                // Sección Indicadores Productivo
-                integratedData.push(['📈 INDICADORES PRODUCTIVO', '', '','','']);
-                integratedData.push(['', 'CARTERA PRODUCTIVO', ...fechas.map(f => processedResults[f].PORCENTAJE_CARTERA_X_VENCER_PROD)]);
-                integratedData.push(['', 'PORCENTAJE DE CARTERA POR VENCER', ...fechas.map(f => processedResults[f].PORCENTAJE_CARTERA_X_VENCER_PROD)]);
-                integratedData.push(['', 'PORCENTAJE DE CARTERA EN RIESGO', ...fechas.map(f => processedResults[f].PORCENTAJE_CARTERA_RIESGO_PROD)]);
-                integratedData.push(['', 'PORCENTAJE DE CARTERA QUE NO DEVENGA INTERES', ...fechas.map(f => processedResults[f].PORCENTA_CARTERA_NDI_PROD)]);
-                integratedData.push(['', 'PORCENTAJE DE CARTERA VENCIDA', ...fechas.map(f => processedResults[f].PORCENTAJE_CARTERA_VENCIDA_PROD)]);
-                integratedData.push(['', '', '','','']); // Separador
+            // Definir secciones con sus datos y colores
+            const secciones = [
+                {
+                    titulo: 'COBERTURAS',
+                    datos: [
+                        ['COBERTURA CARTERA PRODUCTIVO (%)'].concat(fechas.map(function(f) { return processingData[f].coberturas.COBERTURA_CARTERA_PRODUCTIVO; })),
+                        ['COBERTURA CARTERA INVERSIÓN PÚBLICA (%)'].concat(fechas.map(function(f) { return processingData[f].coberturas.COBERTURA_CARTERA_INVERSIÓN_PUBLICA; })),
+                        ['COBERTURA TOTAL CARTERA (%)'].concat(fechas.map(function(f) { return processingData[f].coberturas.COBERTURA_TOTAL_CARTERA; }))
+                    ],
+                    bgColor: 'FCF3CF'
+                },
+                {
+                    titulo: 'CARTERA PRODUCTIVO',
+                    datos: [
+                        ['Total Cartera de Crédito Productivo'].concat(fechas.map(function(f) { return processingData[f].cartera_productivo.TOTAL_C_CREDITO_PRODUCTIVO; })),
+                        ['Total Provisiones Específicas C. Productivo'].concat(fechas.map(function(f) { return processingData[f].cartera_productivo.TOTAL_PROVISIONES_ESPECIFICAS_C_PRODUCTIVO; })),
+                        ['Total Provisión Genérica C. Productivo'].concat(fechas.map(function(f) { return processingData[f].cartera_productivo.TOTAL_PROVISIÓN_GENÉRICA_C_PRODUCTIVO; })),
+                        ['Cartera por Vencer C. Productivo'].concat(fechas.map(function(f) { return processingData[f].cartera_productivo.CARTERA_X_VENCER_C_PRODUCTIVO; })),
+                        ['Total Cartera Riesgo C. Productivo'].concat(fechas.map(function(f) { return processingData[f].cartera_productivo.TOTAL_CARTERA_RIESGO_C_PRODUCTIVO; })),
+                        ['Cartera NDI C. Productivo'].concat(fechas.map(function(f) { return processingData[f].cartera_productivo.CARTERA_NDI_C_PRODUCTIVO; })),
+                        ['Cartera Vencida C. Productivo'].concat(fechas.map(function(f) { return processingData[f].cartera_productivo.CARTERA_VENCIDA_C_PRODUCTIVO; }))
+                    ],
+                    bgColor: 'EBF5FB'
+                },
+                {
+                    titulo: 'CARTERA INVERSIÓN PÚBLICA',
+                    datos: [
+                        ['Total Cartera de Crédito Inversión Publica'].concat(fechas.map(function(f) { return processingData[f].cartera_inv_publica.TOTAL_C_DE_CREDITO_C_IN_PUBLICO; })),
+                        ['Total Provisiones Específicas Inversión Publica'].concat(fechas.map(function(f) { return processingData[f].cartera_inv_publica.TOTAL_PROVISIONES_ESPECIFICAS_C_IN_PUBLICO; })),
+                        ['Total Provisión Genérica Inversión Publica'].concat(fechas.map(function(f) { return processingData[f].cartera_inv_publica.TOTAL_PROVISIÓN_GENÉRICA_CREDITO_C_IN_PUBLICO; })),
+                        ['Cartera por Vencer Inversión Publica'].concat(fechas.map(function(f) { return processingData[f].cartera_inv_publica.CARTERA_X_VENCER_C_IN_PUBLICO; })),
+                        ['Total Cartera Riesgo Inversión Publica'].concat(fechas.map(function(f) { return processingData[f].cartera_inv_publica.TOTAL_CARTERA_RIESGO_C_IN_PUBLICO; })),
+                        ['Cartera NDI Inversión Publica'].concat(fechas.map(function(f) { return processingData[f].cartera_inv_publica.CARTERA_NDI_IN_PUBLICO; })),
+                        ['Cartera Vencida Inversión Publica'].concat(fechas.map(function(f) { return processingData[f].cartera_inv_publica.CARTERA_VENCIDA_IN_PUBLICO; }))
+                    ],
+                    bgColor: 'E8F8F5'
+                },
+                {
+                    titulo: 'INDICADORES PRODUCTIVO',
+                    datos: [
+                        ['CARTERA PRODUCTIVO'].concat(fechas.map(function(f) { return processingData[f].indicadores_productivo.CARTERA_PRODUCTIVO; })),
+                        ['PORCENTAJE DE CARTERA POR VENCER'].concat(fechas.map(function(f) { return processingData[f].indicadores_productivo.PORCENTAJE_CARTERA_X_VENCER; })),
+                        ['PORCENTAJE DE CARTERA EN RIESGO'].concat(fechas.map(function(f) { return processingData[f].indicadores_productivo.PORCENTAJE_CARTERA_RIESGO; })),
+                        ['PORCENTAJE DE CARTERA QUE NO DEVENGA INTERES'].concat(fechas.map(function(f) { return processingData[f].indicadores_productivo.PORCENTAJE_CARTERA_NDI; })),
+                        ['PORCENTAJE DE CARTERA VENCIDA'].concat(fechas.map(function(f) { return processingData[f].indicadores_productivo.PORCENTAJE_CARTERA_VENCIDA; }))
+                    ],
+                    bgColor: 'FEF9E7'
+                },
+                {
+                    titulo: 'INDICADORES INVERSIÓN PÚBLICA',
+                    datos: [
+                        ['CARTERA INVERSIÓN PÚBLICA'].concat(fechas.map(function(f) { return processingData[f].indicadores_inv_publica.CARTERA_INVERSIÓN_PÚBLICA; })),
+                        ['PORCENTAJE DE CARTERA POR VENCER'].concat(fechas.map(function(f) { return processingData[f].indicadores_inv_publica.PORCENTAJE_CARTERA_X_VENCER; })),
+                        ['PORCENTAJE DE CARTERA EN RIESGO'].concat(fechas.map(function(f) { return processingData[f].indicadores_inv_publica.PORCENTAJE_CARTERA_RIESGO; })),
+                        ['PORCENTA DE CARTERA QUE NO DEVENGA INTERES'].concat(fechas.map(function(f) { return processingData[f].indicadores_inv_publica.PORCENTAJE_CARTERA_NDI; })),
+                        ['PORCENTAJE DE CARTERA VENCIDA'].concat(fechas.map(function(f) { return processingData[f].indicadores_inv_publica.PORCENTAJE_CARTERA_VENCIDA; }))
+                    ],
+                    bgColor: 'F4ECF7'
+                },
+                {
+                    titulo: 'PROVISIONES',
+                    datos: [
+                        ['Productivo'].concat(fechas.map(function(f) { return processingData[f].provisiones.Productivo; })),
+                        ['Inversión Publica'].concat(fechas.map(function(f) { return processingData[f].provisiones.Inversión_Publica; })),
+                        ['Refinanciada'].concat(fechas.map(function(f) { return processingData[f].provisiones.Refinanciada; })),
+                        ['Reestructurada'].concat(fechas.map(function(f) { return processingData[f].provisiones.Reestructurada; })),
+                        ['Provisión Anticíclica'].concat(fechas.map(function(f) { return processingData[f].provisiones.Provisión_Anticíclica; })),
+                        ['Provisiones no reversadas por requerimiento normativo'].concat(fechas.map(function(f) { return processingData[f].provisiones.Provisiones_no_reversadas; })),
+                        ['Provisión genérica voluntaria'].concat(fechas.map(function(f) { return processingData[f].provisiones.Provisión_genérica_voluntaria; })),
+                        ['Provisiones para créditos incobrables'].concat(fechas.map(function(f) { return processingData[f].provisiones.Provisiones_para_créditos_incobrables; }))
+                    ],
+                    bgColor: 'F8F9FA'
+                }
+            ];
 
-                // Sección Indicadores Inversión Pública
-                integratedData.push(['📉 INDICADORES INVERSIÓN PÚBLICA', '', '','','']);
-                integratedData.push(['', 'CARTERA INVERSIÓN PÚBLICA', ...fechas.map(f => processedResults[f].CARTERA_INVERSIÓN_PÚBLICA)]);
-                integratedData.push(['', 'PORCENTAJE DE CARTERA POR VENCER', ...fechas.map(f => processedResults[f].PORCENTAJE_CARTERA_X_VENCER_IN_PUBLICO)]);
-                integratedData.push(['', 'PORCENTAJE DE CARTERA EN RIESGO', ...fechas.map(f => processedResults[f].PORCENTAJE_CARTERA_RIESGO_IN_PUBLICO)]);
-                integratedData.push(['', 'PORCENTA DE CARTERA QUE NO DEVENGA INTERES', ...fechas.map(f => processedResults[f].PORCENTA_CARTERA_NDI_IN_PUBLICO)]);
-                integratedData.push(['', 'PORCENTAJE DE CARTERA VENCIDA', ...fechas.map(f => processedResults[f].PORCENTAJE_CARTERA_VENCIDA_IN_PUBLICO)]);
-                integratedData.push(['', '', '','','']); // Separador
-
-                // Sección Provisiones
-                integratedData.push(['💼 PROVISIONES', '', '','','']);
-                integratedData.push(['', 'Productivo', ...fechas.map(f => processedResults[f].Prov_Productivo)]);
-                integratedData.push(['', 'Inversión Publica', ...fechas.map(f => processedResults[f].Prov_Inv_Publica)]);
-                integratedData.push(['', 'Refinanciada', ...fechas.map(f => processedResults[f].Prov_Refinanciada)]);
-                integratedData.push(['', 'Reestructurada', ...fechas.map(f => processedResults[f].Prov_Reestructurada)]);
-                integratedData.push(['', 'Provisión Anticíclica', ...fechas.map(f => processedResults[f].Prov_Anticiclica)]);
-                integratedData.push(['', 'Provisiones no reversadas por requerimiento normativo', ...fechas.map(f => processedResults[f].Prov_No_Normativo)]);
-                integratedData.push(['', 'Provisión genérica voluntaria', ...fechas.map(f => processedResults[f].Prov_Voluntaria)]);
-                integratedData.push(['', 'Provisiones para créditos incobrables', ...fechas.map(f => processedResults[f].Prov_Incombrables)]);
-
-                // Crear worksheet
-                const ws = XLSX.utils.aoa_to_sheet(integratedData);
+            // Agregar cada sección
+            secciones.forEach(function(seccion, seccionIndex) {
+                // Agregar título de sección
+                const tituloRow = worksheet.getRow(currentRow);
+                tituloRow.getCell(1).value = seccion.titulo;
                 
-                // Aplicar formato a las columnas de números (C:E)
-                const range = XLSX.utils.decode_range(ws['!ref']);
-                for (let row = 0; row <= range.e.r; row++) {
-                    for (let col = 2; col <= range.e.c; col++) {
-                        const cellAddr = XLSX.utils.encode_cell({ r: row, c: col });
-                        if (ws[cellAddr] && typeof ws[cellAddr].v === 'number') {
-                            ws[cellAddr].z = '#,##0.00';
-                        }
-                    }
+                // Fusionar celdas del título
+                worksheet.mergeCells(currentRow, 1, currentRow, fechas.length + 1);
+                
+                // Estilo del título
+                tituloRow.getCell(1).font = { 
+                    bold: true, 
+                    color: { argb: 'FFFFFFFF' }, 
+                    size: 13 
+                };
+                tituloRow.getCell(1).fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FF34495E' }
+                };
+                tituloRow.getCell(1).alignment = { 
+                    horizontal: 'center', 
+                    vertical: 'middle' 
+                };
+                tituloRow.height = 25;
+                currentRow++;
+
+                // Agregar encabezados
+                const headerRow = worksheet.getRow(currentRow);
+                headerRow.getCell(1).value = 'Concepto';
+                fechas.forEach(function(fecha, index) {
+                    headerRow.getCell(index + 2).value = fecha;
+                });
+
+                // Estilo de encabezados
+                for (let col = 1; col <= fechas.length + 1; col++) {
+                    const cell = headerRow.getCell(col);
+                    cell.font = { 
+                        bold: true, 
+                        color: { argb: 'FFFFFFFF' }, 
+                        size: 11 
+                    };
+                    cell.fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: 'FF2C3E50' }
+                    };
+                    cell.alignment = { 
+                        horizontal: 'center', 
+                        vertical: 'middle' 
+                    };
+                }
+                headerRow.height = 20;
+                currentRow++;
+
+                // Agregar datos
+                seccion.datos.forEach(function(fila) {
+                    const dataRow = worksheet.getRow(currentRow);
+                    
+                    // Agregar concepto
+                    dataRow.getCell(1).value = fila[0];
+                    dataRow.getCell(1).font = { 
+                        bold: true, 
+                        color: { argb: 'FF333333' } 
+                    };
+                    dataRow.getCell(1).alignment = { 
+                        horizontal: 'left' 
+                    };
+
+                    // Agregar valores numéricos
+                    fila.slice(1).forEach(function(valor, index) {
+                        const cell = dataRow.getCell(index + 2);
+                        cell.value = parseFloat(valor);
+                        cell.numFmt = '#,##0.00';
+                        cell.fill = {
+                            type: 'pattern',
+                            pattern: 'solid',
+                            fgColor: { argb: 'FF' + seccion.bgColor }
+                        };
+                        cell.alignment = { 
+                            horizontal: 'right' 
+                        };
+                    });
+
+                    dataRow.height = 18;
+                    currentRow++;
+                });
+
+                // Agregar espacio entre secciones
+                if (seccionIndex < secciones.length - 1) {
+                    currentRow++;
+                }
+            });
+
+            // Agregar filtros
+            worksheet.autoFilter = {
+                from: { row: 2, column: 1 },
+                to: { row: 2, column: fechas.length + 1 }
+            };
+
+            // Crear hoja de resumen
+            const resumenSheet = workbook.addWorksheet('Resumen');
+            resumenSheet.columns = [{ width: 50 }, { width: 30 }];
+
+            // Información del origen de datos
+            let origenTexto = '';
+            if (origenDatos === 'archivo_subido') {
+                origenTexto = 'Archivo subido por el usuario';
+            } else if (origenDatos === 'cache_local') {
+                origenTexto = 'Datos desde cache local';
+            } else {
+                origenTexto = 'Datos desde repositorio';
+            }
+
+            const resumenData = [
+                ['REPORTE CONSOLIDADO TRIMESTRAL'],
+                ['Banco de Desarrollo del Ecuador'],
+                [''],
+                ['Fecha de generación:', new Date().toLocaleDateString('es-EC')],
+                ['Origen de los datos:', origenTexto],
+                ['Períodos analizados:', `${fechas[0]} a ${fechas[fechas.length - 1]}`],
+                ['Total de trimestres:', fechas.length],
+                [''],
+                ['CONTENIDO DEL REPORTE:'],
+                ['• Coberturas de Cartera'],
+                ['• Cartera Productivo'],
+                ['• Cartera Inversión Pública'],
+                ['• Indicadores Productivo'],
+                ['• Indicadores Inversión Pública'],
+                ['• Provisiones'],
+                [''],
+                ['NOTAS:'],
+                ['• Los valores monetarios están expresados en dólares estadounidenses'],
+                ['• Los porcentajes se muestran con 2 decimales'],
+                ['• Los datos se cargan con formato flexible sin rangos fijos'],
+                ['• Los datos corresponden a fechas trimestrales efectivamente procesadas']
+            ];
+
+            resumenData.forEach(function(fila, index) {
+                const row = resumenSheet.getRow(index + 1);
+                if (Array.isArray(fila)) {
+                    row.getCell(1).value = fila[0];
+                    row.getCell(2).value = fila[1];
+                } else {
+                    row.getCell(1).value = fila;
                 }
 
-                // Ajustar anchos de columnas
-                ws['!cols'] = [
-                    { wch: 40 }, // Sección
-                    { wch: 50 }, // Concepto
-                    { wch: 20 }, // Fecha 1
-                    { wch: 20 }, // Fecha 2
-                    { wch: 20 }  // Fecha 3
-                ];
+                // Estilo especial para títulos
+                if (index === 0 || index === 1) {
+                    row.getCell(1).font = { bold: true, size: 14 };
+                    row.getCell(1).fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: 'FFE8F4F8' }
+                    };
+                }
+            });
 
-                XLSX.utils.book_append_sheet(wb, ws, "Reporte_Consolidado_Trimestral");
-
-                // Generar archivo
-                const fileName = `Reporte_BDD_Trimestral_${new Date().toISOString().slice(0,10)}.xlsx`;
-                XLSX.writeFile(wb, fileName);
+            // Exportar archivo
+            try {
+                const buffer = await workbook.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { 
+                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+                });
                 
-                showSuccess(`Archivo Excel descargado: ${fileName}`);
-
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                
+                const timestamp = new Date().toISOString().slice(0, 10);
+                const origenSufijo = origenDatos === 'archivo_subido' ? '_Usuario' : '';
+                link.download = `Reporte_Consolidado_Trimestral_BDD_${timestamp}${origenSufijo}.xlsx`;
+                
+                link.click();
+                window.URL.revokeObjectURL(url);
+                
+                mostrarMensajeExito(`Archivo Excel exportado exitosamente (${origenTexto}): Reporte_Consolidado_Trimestral_BDD_${timestamp}${origenSufijo}.xlsx`);
+                
             } catch (error) {
-                showError('Error al generar el archivo Excel: ' + error.message);
-                console.error('Error:', error);
+                console.error('Error al exportar:', error);
+                alert('Error al generar el archivo Excel. Intenta de nuevo.');
             }
         }
 
-        function showError(message) {
-            const errorDiv = document.getElementById('errorMsg');
-            errorDiv.textContent = message;
-            errorDiv.style.display = 'block';
+        // Mostrar mensaje de éxito
+        function mostrarMensajeExito(mensaje) {
+            const container = document.querySelector('.container');
+            const exitoDiv = document.createElement('div');
+            exitoDiv.className = 'info-panel';
+            exitoDiv.style.background = '#d5f4e6';
+            exitoDiv.style.borderLeft = '4px solid #27ae60';
+            exitoDiv.style.color = '#155724';
+            exitoDiv.innerHTML = `<strong>${mensaje}</strong>`;
+            
+            // Insertar después del upload-section
+            const uploadSection = document.querySelector('.upload-section');
+            uploadSection.insertAdjacentElement('afterend', exitoDiv);
+            
+            // Remover después de 4 segundos
             setTimeout(() => {
-                errorDiv.style.display = 'none';
-            }, 5000);
+                if (exitoDiv.parentNode) {
+                    exitoDiv.remove();
+                }
+            }, 4000);
         }
 
-        function showSuccess(message) {
-            const successDiv = document.getElementById('successMsg');
-            successDiv.textContent = message;
-            successDiv.style.display = 'block';
+        // Mostrar error mejorado
+        function mostrarError(mensaje) {
+            document.getElementById('loading').style.display = 'none';
+            const container = document.querySelector('.container');
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-panel';
+            errorDiv.innerHTML = `<strong>Error:</strong> ${mensaje}`;
+            
+            // Insertar después del upload-section
+            const uploadSection = document.querySelector('.upload-section');
+            uploadSection.insertAdjacentElement('afterend', errorDiv);
+            
             setTimeout(() => {
-                successDiv.style.display = 'none';
-            }, 5000);
+                if (errorDiv.parentNode) {
+                    errorDiv.remove();
+                }
+            }, 8000);
         }
 
-        function showLoading(show) {
-            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        // Nueva función específica para procesar archivos subidos por el usuario
+        function procesarArchivoSubido(workbook, nombreArchivo) {
+            try {
+                console.log('Iniciando procesamiento de archivo subido:', nombreArchivo);
+                
+                // Buscar hoja principal
+                let mainSheetName = 'BAL';
+                if (!workbook.Sheets[mainSheetName]) {
+                    mainSheetName = workbook.SheetNames[0];
+                    console.log('Hoja "BAL" no encontrada, usando:', mainSheetName);
+                }
+                
+                const mainSheet = workbook.Sheets[mainSheetName];
+                const indicSheet = workbook.Sheets['INDIC CARTERA'];
+                
+                if (!mainSheet) {
+                    throw new Error(`La hoja principal "${mainSheetName}" no existe en el archivo`);
+                }
+                
+                if (!indicSheet) {
+                    throw new Error('La hoja "INDIC CARTERA" no existe en el archivo');
+                }
+
+                console.log('Extrayendo datos desde fila 5 con carga flexible...');
+
+                // Extraer datos DESDE EL ARCHIVO SUBIDO con carga flexible
+                const mainData = XLSX.utils.sheet_to_json(mainSheet, { 
+                    header: 1,
+                    range: 4,  // Desde fila 5 (índice 4)
+                    defval: ''
+                });
+                
+                const indicData = XLSX.utils.sheet_to_json(indicSheet, { 
+                    header: 1,
+                    range: 4,  // Desde fila 5 (índice 4) 
+                    defval: ''
+                });
+
+                console.log('Filas extraídas - Principal:', mainData.length, 'Indicadores:', indicData.length);
+
+                // Procesar datos del archivo subido
+                const resultados = procesarDatos(mainData, indicData);
+                
+                console.log('Procesamiento completado. Fechas encontradas:', Object.keys(resultados).length);
+                
+                return resultados;
+                
+            } catch (error) {
+                console.error('Error en procesarArchivoSubido:', error);
+                throw new Error(`Error procesando ${nombreArchivo}: ${error.message}`);
+            }
         }
 
-        // Cargar datos por defecto al iniciar
-        window.addEventListener('load', () => {
-            console.log('Página cargada - Lista para procesar archivos Excel');
+        // Event Listeners
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('processBtn').disabled = false;
+                document.querySelector('.file-input-label').textContent = `📁 ${file.name}`;
+            }
+        });
+
+        document.getElementById('loadDefault').addEventListener('click', function() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('exportSection').style.display = 'none';
+            cargarDatosPorDefecto();
+        });
+
+        document.getElementById('forceUpdate').addEventListener('click', function() {
+            forzarActualizacion();
+        });
+
+        document.getElementById('processBtn').addEventListener('click', function() {
+            const file = document.getElementById('fileInput').files[0];
+            if (!file) {
+                mostrarError('Por favor selecciona un archivo Excel primero.');
+                return;
+            }
+
+            // Mostrar loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('exportSection').style.display = 'none';
+
+            // Actualizar mensaje de carga para archivo subido
+            const loadingDiv = document.getElementById('loading');
+            loadingDiv.innerHTML = `
+                <div class="spinner"></div>
+                <p><strong>🔄 Procesando tu archivo...</strong></p>
+                <p>📂 Analizando: ${file.name}</p>
+                <p>⚡ Aplicando carga flexible de datos...</p>
+            `;
+
+            // Crear FileReader para leer el archivo subido
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    console.log('🔍 Procesando archivo subido:', file.name);
+                    
+                    // Leer el workbook DESDE EL ARCHIVO SUBIDO
+                    const arrayBuffer = e.target.result;
+                    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                    
+                    console.log('📊 Hojas disponibles:', workbook.SheetNames);
+                    
+                    // Procesar DIRECTAMENTE desde el archivo subido
+                    const resultados = procesarArchivoSubido(workbook, file.name);
+                    
+                    if (resultados && Object.keys(resultados).length > 0) {
+                        // Actualizar datos globales CON LOS DATOS DEL ARCHIVO SUBIDO
+                        processingData = resultados;
+                        const fechaActual = new Date();
+                        fechaUltimaActualizacion = fechaActual;
+                        
+                        // Mostrar resultados del archivo REALMENTE subido
+                        mostrarResultados(resultados);
+                        
+                        // Actualizar información del archivo procesado
+                        mostrarInfoArchivoSubido(file.name, fechaActual);
+                        mostrarMensajeExito(`✅ Tu archivo procesado exitosamente: ${file.name}`);
+                        
+                        // Limpiar cache del repositorio
+                        localStorage.removeItem('bdd_datos_procesados');
+                        localStorage.removeItem('bdd_fecha_actualizacion');
+                        
+                        origenDatos = 'archivo_subido';
+                        
+                        console.log('✅ Archivo subido procesado correctamente con', Object.keys(resultados).length, 'fechas');
+                        console.log('📅 Fechas procesadas:', Object.keys(resultados));
+                    } else {
+                        throw new Error('No se pudieron extraer datos del archivo subido');
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Error procesando archivo subido:', error);
+                    mostrarError('Error al procesar tu archivo: ' + error.message + '. Verifica que el archivo tenga las hojas "BAL" e "INDIC CARTERA".');
+                }
+            };
+            
+            reader.onerror = function(error) {
+                console.error('❌ Error leyendo archivo:', error);
+                mostrarError('Error al leer el archivo. Intenta de nuevo.');
+            };
+            
+            // Leer como ArrayBuffer para mayor compatibilidad
+            reader.readAsArrayBuffer(file);
+        });
+
+        document.getElementById('exportBtn').addEventListener('click', exportarExcel);
+
+        // Cargar datos por defecto al inicio
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                document.getElementById('loading').style.display = 'block';
+                cargarDatosPorDefecto();
+            }, 1000);
         });
     </script>
 </body>
