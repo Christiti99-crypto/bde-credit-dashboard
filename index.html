@@ -347,7 +347,6 @@
         let fechasTrimestrales = [];
         let datosGuardados = null;
         let fechaUltimaActualizacion = null;
-        let origenDatos = null; // 'repositorio', 'archivo_subido', 'cache_local'
 
         // Detectar archivos BDD disponibles automáticamente
         async function detectarArchivosDisponibles() {
@@ -474,7 +473,6 @@
             try {
                 // Mostrar carga inicial
                 const loadingDiv = document.getElementById('loading');
-                loadingDiv.style.display = 'block';
                 loadingDiv.innerHTML = `
                     <div class="spinner"></div>
                     <p><strong>Verificando datos locales...</strong></p>
@@ -495,7 +493,6 @@
                         mostrarResultados(processingData);
                         mostrarInfoArchivo('Datos guardados', datosLocales.fecha, true);
                         mostrarMensajeExito('Datos cargados desde caché local');
-                        origenDatos = 'cache_local';
                     }, 500);
                     return;
                 }
@@ -538,10 +535,8 @@
                     guardarDatosLocalmente(resultados);
                     fechaUltimaActualizacion = new Date();
                     
-                    mostrarResultados(resultados);
                     mostrarInfoArchivo(archivoDetectado.nombre, archivoDetectado.fecha, false);
                     mostrarMensajeExito(`Datos cargados: ${archivoDetectado.nombre}`);
-                    origenDatos = 'repositorio';
                 }
                 
             } catch (error) {
@@ -606,13 +601,9 @@
                     guardarDatosLocalmente(resultados);
                     fechaUltimaActualizacion = new Date();
                     
-                    // Mostrar resultados
-                    mostrarResultados(resultados);
-                    
                     // Mostrar mensaje de éxito
                     mostrarMensajeExito(`Actualización completada: ${archivoDetectado.nombre}`);
                     mostrarInfoArchivo(archivoDetectado.nombre, archivoDetectado.fecha, false);
-                    origenDatos = 'repositorio';
                 } else {
                     throw new Error('Error al procesar los datos del archivo');
                 }
@@ -684,8 +675,8 @@
             return fechasTrimestrales;
         }
 
-        // Procesar archivo Excel con carga flexible - SOLO PARA REPOSITORIO
-        function procesarWorkbook(workbook) {
+        // Procesar archivo Excel con carga flexible
+        function procesarWorkbook(workbook, esArchivoSubido = false, nombreArchivo = null) {
             try {
                 // Buscar hoja principal (puede ser "BAL" o la primera hoja)
                 let mainSheetName = 'BAL';
@@ -713,6 +704,11 @@
 
                 // Procesar datos
                 const resultados = procesarDatos(mainData, indicData);
+                
+                // Solo mostrar resultados si no es archivo subido (para evitar doble procesamiento)
+                if (!esArchivoSubido) {
+                    mostrarResultados(resultados);
+                }
                 
                 return resultados; // Retornar para poder guardar
                 
@@ -949,61 +945,61 @@
             
             // Crear tabla de coberturas
             const coberturasData = [
-                ['COBERTURA CARTERA PRODUCTIVO (%)'].concat(fechas.map(function(f) { return resultados[f].coberturas.COBERTURA_CARTERA_PRODUCTIVO; })),
-                ['COBERTURA CARTERA INVERSIÓN PÚBLICA (%)'].concat(fechas.map(function(f) { return resultados[f].coberturas.COBERTURA_CARTERA_INVERSIÓN_PUBLICA; })),
-                ['COBERTURA TOTAL CARTERA (%)'].concat(fechas.map(function(f) { return resultados[f].coberturas.COBERTURA_TOTAL_CARTERA; }))
+                ['COBERTURA CARTERA PRODUCTIVO (%)', ...fechas.map(f => resultados[f].coberturas.COBERTURA_CARTERA_PRODUCTIVO)],
+                ['COBERTURA CARTERA INVERSIÓN PÚBLICA (%)', ...fechas.map(f => resultados[f].coberturas.COBERTURA_CARTERA_INVERSIÓN_PÚBLICA)],
+                ['COBERTURA TOTAL CARTERA (%)', ...fechas.map(f => resultados[f].coberturas.COBERTURA_TOTAL_CARTERA)]
             ];
             
             // Crear tabla de cartera productivo
             const productivoData = [
-                ['Total Cartera de Crédito Productivo'].concat(fechas.map(function(f) { return resultados[f].cartera_productivo.TOTAL_C_CREDITO_PRODUCTIVO; })),
-                ['Total Provisiones Específicas C. Productivo'].concat(fechas.map(function(f) { return resultados[f].cartera_productivo.TOTAL_PROVISIONES_ESPECIFICAS_C_PRODUCTIVO; })),
-                ['Total Provisión Genérica C. Productivo'].concat(fechas.map(function(f) { return resultados[f].cartera_productivo.TOTAL_PROVISIÓN_GENÉRICA_C_PRODUCTIVO; })),
-                ['Cartera por Vencer C. Productivo'].concat(fechas.map(function(f) { return resultados[f].cartera_productivo.CARTERA_X_VENCER_C_PRODUCTIVO; })),
-                ['Total Cartera Riesgo C. Productivo'].concat(fechas.map(function(f) { return resultados[f].cartera_productivo.TOTAL_CARTERA_RIESGO_C_PRODUCTIVO; })),
-                ['Cartera NDI C. Productivo'].concat(fechas.map(function(f) { return resultados[f].cartera_productivo.CARTERA_NDI_C_PRODUCTIVO; })),
-                ['Cartera Vencida C. Productivo'].concat(fechas.map(function(f) { return resultados[f].cartera_productivo.CARTERA_VENCIDA_C_PRODUCTIVO; }))
+                ['Total Cartera de Crédito Productivo', ...fechas.map(f => resultados[f].cartera_productivo.TOTAL_C_CREDITO_PRODUCTIVO)],
+                ['Total Provisiones Específicas C. Productivo', ...fechas.map(f => resultados[f].cartera_productivo.TOTAL_PROVISIONES_ESPECIFICAS_C_PRODUCTIVO)],
+                ['Total Provisión Genérica C. Productivo', ...fechas.map(f => resultados[f].cartera_productivo.TOTAL_PROVISIÓN_GENÉRICA_C_PRODUCTIVO)],
+                ['Cartera por Vencer C. Productivo', ...fechas.map(f => resultados[f].cartera_productivo.CARTERA_X_VENCER_C_PRODUCTIVO)],
+                ['Total Cartera Riesgo C. Productivo', ...fechas.map(f => resultados[f].cartera_productivo.TOTAL_CARTERA_RIESGO_C_PRODUCTIVO)],
+                ['Cartera NDI C. Productivo', ...fechas.map(f => resultados[f].cartera_productivo.CARTERA_NDI_C_PRODUCTIVO)],
+                ['Cartera Vencida C. Productivo', ...fechas.map(f => resultados[f].cartera_productivo.CARTERA_VENCIDA_C_PRODUCTIVO)]
             ];
             
             // Crear tabla de cartera inversión pública
             const invPublicaData = [
-                ['Total Cartera de Crédito Inversión Publica'].concat(fechas.map(function(f) { return resultados[f].cartera_inv_publica.TOTAL_C_DE_CREDITO_C_IN_PUBLICO; })),
-                ['Total Provisiones Específicas Inversión Publica'].concat(fechas.map(function(f) { return resultados[f].cartera_inv_publica.TOTAL_PROVISIONES_ESPECIFICAS_C_IN_PUBLICO; })),
-                ['Total Provisión Genérica Inversión Publica'].concat(fechas.map(function(f) { return resultados[f].cartera_inv_publica.TOTAL_PROVISIÓN_GENÉRICA_CREDITO_C_IN_PUBLICO; })),
-                ['Cartera por Vencer Inversión Publica'].concat(fechas.map(function(f) { return resultados[f].cartera_inv_publica.CARTERA_X_VENCER_C_IN_PUBLICO; })),
-                ['Total Cartera Riesgo Inversión Publica'].concat(fechas.map(function(f) { return resultados[f].cartera_inv_publica.TOTAL_CARTERA_RIESGO_C_IN_PUBLICO; })),
-                ['Cartera NDI Inversión Publica'].concat(fechas.map(function(f) { return resultados[f].cartera_inv_publica.CARTERA_NDI_IN_PUBLICO; })),
-                ['Cartera Vencida Inversión Publica'].concat(fechas.map(function(f) { return resultados[f].cartera_inv_publica.CARTERA_VENCIDA_IN_PUBLICO; }))
+                ['Total Cartera de Crédito Inversión Publica', ...fechas.map(f => resultados[f].cartera_inv_publica.TOTAL_C_DE_CREDITO_C_IN_PUBLICO)],
+                ['Total Provisiones Específicas Inversión Publica', ...fechas.map(f => resultados[f].cartera_inv_publica.TOTAL_PROVISIONES_ESPECIFICAS_C_IN_PUBLICO)],
+                ['Total Provisión Genérica Inversión Publica', ...fechas.map(f => resultados[f].cartera_inv_publica.TOTAL_PROVISIÓN_GENÉRICA_CREDITO_C_IN_PUBLICO)],
+                ['Cartera por Vencer Inversión Publica', ...fechas.map(f => resultados[f].cartera_inv_publica.CARTERA_X_VENCER_C_IN_PUBLICO)],
+                ['Total Cartera Riesgo Inversión Publica', ...fechas.map(f => resultados[f].cartera_inv_publica.TOTAL_CARTERA_RIESGO_C_IN_PUBLICO)],
+                ['Cartera NDI Inversión Publica', ...fechas.map(f => resultados[f].cartera_inv_publica.CARTERA_NDI_IN_PUBLICO)],
+                ['Cartera Vencida Inversión Publica', ...fechas.map(f => resultados[f].cartera_inv_publica.CARTERA_VENCIDA_IN_PUBLICO)]
             ];
             
             // Crear tabla de indicadores productivo
             const indicadoresProductivoData = [
-                ['CARTERA PRODUCTIVO'].concat(fechas.map(function(f) { return resultados[f].indicadores_productivo.CARTERA_PRODUCTIVO; })),
-                ['PORCENTAJE DE CARTERA POR VENCER'].concat(fechas.map(function(f) { return resultados[f].indicadores_productivo.PORCENTAJE_CARTERA_X_VENCER; })),
-                ['PORCENTAJE DE CARTERA EN RIESGO'].concat(fechas.map(function(f) { return resultados[f].indicadores_productivo.PORCENTAJE_CARTERA_RIESGO; })),
-                ['PORCENTAJE DE CARTERA QUE NO DEVENGA INTERES'].concat(fechas.map(function(f) { return resultados[f].indicadores_productivo.PORCENTAJE_CARTERA_NDI; })),
-                ['PORCENTAJE DE CARTERA VENCIDA'].concat(fechas.map(function(f) { return resultados[f].indicadores_productivo.PORCENTAJE_CARTERA_VENCIDA; }))
+                ['CARTERA PRODUCTIVO', ...fechas.map(f => resultados[f].indicadores_productivo.CARTERA_PRODUCTIVO)],
+                ['PORCENTAJE DE CARTERA POR VENCER', ...fechas.map(f => resultados[f].indicadores_productivo.PORCENTAJE_CARTERA_X_VENCER)],
+                ['PORCENTAJE DE CARTERA EN RIESGO', ...fechas.map(f => resultados[f].indicadores_productivo.PORCENTAJE_CARTERA_RIESGO)],
+                ['PORCENTAJE DE CARTERA QUE NO DEVENGA INTERES', ...fechas.map(f => resultados[f].indicadores_productivo.PORCENTAJE_CARTERA_NDI)],
+                ['PORCENTAJE DE CARTERA VENCIDA', ...fechas.map(f => resultados[f].indicadores_productivo.PORCENTAJE_CARTERA_VENCIDA)]
             ];
             
             // Crear tabla de indicadores inversión pública
             const indicadoresInvData = [
-                ['CARTERA INVERSIÓN PÚBLICA'].concat(fechas.map(function(f) { return resultados[f].indicadores_inv_publica.CARTERA_INVERSIÓN_PÚBLICA; })),
-                ['PORCENTAJE DE CARTERA POR VENCER'].concat(fechas.map(function(f) { return resultados[f].indicadores_inv_publica.PORCENTAJE_CARTERA_X_VENCER; })),
-                ['PORCENTAJE DE CARTERA EN RIESGO'].concat(fechas.map(function(f) { return resultados[f].indicadores_inv_publica.PORCENTAJE_CARTERA_RIESGO; })),
-                ['PORCENTA DE CARTERA QUE NO DEVENGA INTERES'].concat(fechas.map(function(f) { return resultados[f].indicadores_inv_publica.PORCENTAJE_CARTERA_NDI; })),
-                ['PORCENTAJE DE CARTERA VENCIDA'].concat(fechas.map(function(f) { return resultados[f].indicadores_inv_publica.PORCENTAJE_CARTERA_VENCIDA; }))
+                ['CARTERA INVERSIÓN PÚBLICA', ...fechas.map(f => resultados[f].indicadores_inv_publica.CARTERA_INVERSIÓN_PÚBLICA)],
+                ['PORCENTAJE DE CARTERA POR VENCER', ...fechas.map(f => resultados[f].indicadores_inv_publica.PORCENTAJE_CARTERA_X_VENCER)],
+                ['PORCENTAJE DE CARTERA EN RIESGO', ...fechas.map(f => resultados[f].indicadores_inv_publica.PORCENTAJE_CARTERA_RIESGO)],
+                ['PORCENTA DE CARTERA QUE NO DEVENGA INTERES', ...fechas.map(f => resultados[f].indicadores_inv_publica.PORCENTAJE_CARTERA_NDI)],
+                ['PORCENTAJE DE CARTERA VENCIDA', ...fechas.map(f => resultados[f].indicadores_inv_publica.PORCENTAJE_CARTERA_VENCIDA)]
             ];
             
-            // Crear tabla de provisiones (CORREGIDO)
+            // Crear tabla de provisiones
             const provisionesData = [
-                ['Productivo'].concat(fechas.map(function(f) { return resultados[f].provisiones.Productivo; })),
-                ['Inversión Publica'].concat(fechas.map(function(f) { return resultados[f].provisiones.Inversión_Publica; })),
-                ['Refinanciada'].concat(fechas.map(function(f) { return resultados[f].provisiones.Refinanciada; })),
-                ['Reestructurada'].concat(fechas.map(function(f) { return resultados[f].provisiones.Reestructurada; })),
-                ['Provisión Anticíclica'].concat(fechas.map(function(f) { return resultados[f].provisiones.Provisión_Anticíclica; })),
-                ['Provisiones no reversadas por requerimiento normativo'].concat(fechas.map(function(f) { return resultados[f].provisiones.Provisiones_no_reversadas; })),
-                ['Provisión genérica voluntaria'].concat(fechas.map(function(f) { return resultados[f].provisiones.Provisión_genérica_voluntaria; })),
-                ['Provisiones para créditos incobrables'].concat(fechas.map(function(f) { return resultados[f].provisiones.Provisiones_para_créditos_incobrables; }))
+                ['Productivo', ...fechas.map(f => resultados[f].provisiones.Productivo)],
+                ['Inversión Publica', ...fechas.map(f => resultados[f].provisiones.Inversión_Publica)],
+                ['Refinanciada', ...fechas.map(f => resultados[f].provisiones.Refinanciada)],
+                ['Reestructurada', ...fechas.map(f => resultados[f].provisiones.Reestructurada)],
+                ['Provisión Anticíclica', ...fechas.map(f => resultados[f].provisiones.Provisión_Anticíclica)],
+                ['Provisiones no reversadas por requerimiento normativo', ...fechas.map(f => resultados[f].provisiones.Provisiones_no_reversadas)],
+                ['Provisión genérica voluntaria', ...fechas.map(f => resultados[f].provisiones.Provisión_genérica_voluntaria)],
+                ['Provisiones para créditos incobrables', ...fechas.map(f => resultados[f].provisiones.Provisiones_para_créditos_incobrables)]
             ];
             
             // Generar las tablas HTML
@@ -1033,7 +1029,7 @@
             conceptoHeader.textContent = 'Concepto';
             headerRow.appendChild(conceptoHeader);
             
-            fechas.forEach(function(fecha) {
+            fechas.forEach(fecha => {
                 const th = document.createElement('th');
                 th.textContent = fecha;
                 headerRow.appendChild(th);
@@ -1103,25 +1099,11 @@
                 return;
             }
 
-            // Mostrar información sobre qué datos se están exportando
-            let tituloExportacion = '';
-            if (origenDatos === 'archivo_subido') {
-                tituloExportacion = 'Exportando datos de tu archivo subido...';
-            } else if (origenDatos === 'cache_local') {
-                tituloExportacion = 'Exportando datos desde cache local...';
-            } else {
-                tituloExportacion = 'Exportando datos del repositorio...';
-            }
-            
-            console.log(tituloExportacion);
-            console.log('Origen de los datos:', origenDatos);
-            console.log('Fechas a exportar:', Object.keys(processingData));
-
             const fechas = Object.keys(processingData);
             
             // Crear workbook con ExcelJS
             const workbook = new ExcelJS.Workbook();
-            workbook.creator = `Sistema BDD - Origen: ${origenDatos}`;
+            workbook.creator = 'Sistema BDD';
             workbook.lastModifiedBy = 'Sistema BDD';
             workbook.created = new Date();
             workbook.modified = new Date();
@@ -1131,11 +1113,10 @@
             const worksheet = workbook.addWorksheet('Reporte Consolidado Trimestral');
 
             // Configurar columnas
-            const columns = [];
-            columns.push({ width: 45 }); // Columna de conceptos
-            fechas.forEach(function() {
-                columns.push({ width: 18 }); // Columnas de fechas
-            });
+            const columns = [
+                { width: 45 }, // Columna de conceptos
+                ...fechas.map(() => ({ width: 18 })) // Columnas de fechas
+            ];
             worksheet.columns = columns;
 
             let currentRow = 1;
@@ -1145,78 +1126,78 @@
                 {
                     titulo: 'COBERTURAS',
                     datos: [
-                        ['COBERTURA CARTERA PRODUCTIVO (%)'].concat(fechas.map(function(f) { return processingData[f].coberturas.COBERTURA_CARTERA_PRODUCTIVO; })),
-                        ['COBERTURA CARTERA INVERSIÓN PÚBLICA (%)'].concat(fechas.map(function(f) { return processingData[f].coberturas.COBERTURA_CARTERA_INVERSIÓN_PUBLICA; })),
-                        ['COBERTURA TOTAL CARTERA (%)'].concat(fechas.map(function(f) { return processingData[f].coberturas.COBERTURA_TOTAL_CARTERA; }))
+                        ['COBERTURA CARTERA PRODUCTIVO (%)', ...fechas.map(f => processingData[f].coberturas.COBERTURA_CARTERA_PRODUCTIVO)],
+                        ['COBERTURA CARTERA INVERSIÓN PÚBLICA (%)', ...fechas.map(f => processingData[f].coberturas.COBERTURA_CARTERA_INVERSIÓN_PÚBLICA)],
+                        ['COBERTURA TOTAL CARTERA (%)', ...fechas.map(f => processingData[f].coberturas.COBERTURA_TOTAL_CARTERA)]
                     ],
                     bgColor: 'FCF3CF'
                 },
                 {
                     titulo: 'CARTERA PRODUCTIVO',
                     datos: [
-                        ['Total Cartera de Crédito Productivo'].concat(fechas.map(function(f) { return processingData[f].cartera_productivo.TOTAL_C_CREDITO_PRODUCTIVO; })),
-                        ['Total Provisiones Específicas C. Productivo'].concat(fechas.map(function(f) { return processingData[f].cartera_productivo.TOTAL_PROVISIONES_ESPECIFICAS_C_PRODUCTIVO; })),
-                        ['Total Provisión Genérica C. Productivo'].concat(fechas.map(function(f) { return processingData[f].cartera_productivo.TOTAL_PROVISIÓN_GENÉRICA_C_PRODUCTIVO; })),
-                        ['Cartera por Vencer C. Productivo'].concat(fechas.map(function(f) { return processingData[f].cartera_productivo.CARTERA_X_VENCER_C_PRODUCTIVO; })),
-                        ['Total Cartera Riesgo C. Productivo'].concat(fechas.map(function(f) { return processingData[f].cartera_productivo.TOTAL_CARTERA_RIESGO_C_PRODUCTIVO; })),
-                        ['Cartera NDI C. Productivo'].concat(fechas.map(function(f) { return processingData[f].cartera_productivo.CARTERA_NDI_C_PRODUCTIVO; })),
-                        ['Cartera Vencida C. Productivo'].concat(fechas.map(function(f) { return processingData[f].cartera_productivo.CARTERA_VENCIDA_C_PRODUCTIVO; }))
+                        ['Total Cartera de Crédito Productivo', ...fechas.map(f => processingData[f].cartera_productivo.TOTAL_C_CREDITO_PRODUCTIVO)],
+                        ['Total Provisiones Específicas C. Productivo', ...fechas.map(f => processingData[f].cartera_productivo.TOTAL_PROVISIONES_ESPECIFICAS_C_PRODUCTIVO)],
+                        ['Total Provisión Genérica C. Productivo', ...fechas.map(f => processingData[f].cartera_productivo.TOTAL_PROVISIÓN_GENÉRICA_C_PRODUCTIVO)],
+                        ['Cartera por Vencer C. Productivo', ...fechas.map(f => processingData[f].cartera_productivo.CARTERA_X_VENCER_C_PRODUCTIVO)],
+                        ['Total Cartera Riesgo C. Productivo', ...fechas.map(f => processingData[f].cartera_productivo.TOTAL_CARTERA_RIESGO_C_PRODUCTIVO)],
+                        ['Cartera NDI C. Productivo', ...fechas.map(f => processingData[f].cartera_productivo.CARTERA_NDI_C_PRODUCTIVO)],
+                        ['Cartera Vencida C. Productivo', ...fechas.map(f => processingData[f].cartera_productivo.CARTERA_VENCIDA_C_PRODUCTIVO)]
                     ],
                     bgColor: 'EBF5FB'
                 },
                 {
                     titulo: 'CARTERA INVERSIÓN PÚBLICA',
                     datos: [
-                        ['Total Cartera de Crédito Inversión Publica'].concat(fechas.map(function(f) { return processingData[f].cartera_inv_publica.TOTAL_C_DE_CREDITO_C_IN_PUBLICO; })),
-                        ['Total Provisiones Específicas Inversión Publica'].concat(fechas.map(function(f) { return processingData[f].cartera_inv_publica.TOTAL_PROVISIONES_ESPECIFICAS_C_IN_PUBLICO; })),
-                        ['Total Provisión Genérica Inversión Publica'].concat(fechas.map(function(f) { return processingData[f].cartera_inv_publica.TOTAL_PROVISIÓN_GENÉRICA_CREDITO_C_IN_PUBLICO; })),
-                        ['Cartera por Vencer Inversión Publica'].concat(fechas.map(function(f) { return processingData[f].cartera_inv_publica.CARTERA_X_VENCER_C_IN_PUBLICO; })),
-                        ['Total Cartera Riesgo Inversión Publica'].concat(fechas.map(function(f) { return processingData[f].cartera_inv_publica.TOTAL_CARTERA_RIESGO_C_IN_PUBLICO; })),
-                        ['Cartera NDI Inversión Publica'].concat(fechas.map(function(f) { return processingData[f].cartera_inv_publica.CARTERA_NDI_IN_PUBLICO; })),
-                        ['Cartera Vencida Inversión Publica'].concat(fechas.map(function(f) { return processingData[f].cartera_inv_publica.CARTERA_VENCIDA_IN_PUBLICO; }))
+                        ['Total Cartera de Crédito Inversión Publica', ...fechas.map(f => processingData[f].cartera_inv_publica.TOTAL_C_DE_CREDITO_C_IN_PUBLICO)],
+                        ['Total Provisiones Específicas Inversión Publica', ...fechas.map(f => processingData[f].cartera_inv_publica.TOTAL_PROVISIONES_ESPECIFICAS_C_IN_PUBLICO)],
+                        ['Total Provisión Genérica Inversión Publica', ...fechas.map(f => processingData[f].cartera_inv_publica.TOTAL_PROVISIÓN_GENÉRICA_CREDITO_C_IN_PUBLICO)],
+                        ['Cartera por Vencer Inversión Publica', ...fechas.map(f => processingData[f].cartera_inv_publica.CARTERA_X_VENCER_C_IN_PUBLICO)],
+                        ['Total Cartera Riesgo Inversión Publica', ...fechas.map(f => processingData[f].cartera_inv_publica.TOTAL_CARTERA_RIESGO_C_IN_PUBLICO)],
+                        ['Cartera NDI Inversión Publica', ...fechas.map(f => processingData[f].cartera_inv_publica.CARTERA_NDI_IN_PUBLICO)],
+                        ['Cartera Vencida Inversión Publica', ...fechas.map(f => processingData[f].cartera_inv_publica.CARTERA_VENCIDA_IN_PUBLICO)]
                     ],
                     bgColor: 'E8F8F5'
                 },
                 {
                     titulo: 'INDICADORES PRODUCTIVO',
                     datos: [
-                        ['CARTERA PRODUCTIVO'].concat(fechas.map(function(f) { return processingData[f].indicadores_productivo.CARTERA_PRODUCTIVO; })),
-                        ['PORCENTAJE DE CARTERA POR VENCER'].concat(fechas.map(function(f) { return processingData[f].indicadores_productivo.PORCENTAJE_CARTERA_X_VENCER; })),
-                        ['PORCENTAJE DE CARTERA EN RIESGO'].concat(fechas.map(function(f) { return processingData[f].indicadores_productivo.PORCENTAJE_CARTERA_RIESGO; })),
-                        ['PORCENTAJE DE CARTERA QUE NO DEVENGA INTERES'].concat(fechas.map(function(f) { return processingData[f].indicadores_productivo.PORCENTAJE_CARTERA_NDI; })),
-                        ['PORCENTAJE DE CARTERA VENCIDA'].concat(fechas.map(function(f) { return processingData[f].indicadores_productivo.PORCENTAJE_CARTERA_VENCIDA; }))
+                        ['CARTERA PRODUCTIVO', ...fechas.map(f => processingData[f].indicadores_productivo.CARTERA_PRODUCTIVO)],
+                        ['PORCENTAJE DE CARTERA POR VENCER', ...fechas.map(f => processingData[f].indicadores_productivo.PORCENTAJE_CARTERA_X_VENCER)],
+                        ['PORCENTAJE DE CARTERA EN RIESGO', ...fechas.map(f => processingData[f].indicadores_productivo.PORCENTAJE_CARTERA_RIESGO)],
+                        ['PORCENTAJE DE CARTERA QUE NO DEVENGA INTERES', ...fechas.map(f => processingData[f].indicadores_productivo.PORCENTAJE_CARTERA_NDI)],
+                        ['PORCENTAJE DE CARTERA VENCIDA', ...fechas.map(f => processingData[f].indicadores_productivo.PORCENTAJE_CARTERA_VENCIDA)]
                     ],
                     bgColor: 'FEF9E7'
                 },
                 {
                     titulo: 'INDICADORES INVERSIÓN PÚBLICA',
                     datos: [
-                        ['CARTERA INVERSIÓN PÚBLICA'].concat(fechas.map(function(f) { return processingData[f].indicadores_inv_publica.CARTERA_INVERSIÓN_PÚBLICA; })),
-                        ['PORCENTAJE DE CARTERA POR VENCER'].concat(fechas.map(function(f) { return processingData[f].indicadores_inv_publica.PORCENTAJE_CARTERA_X_VENCER; })),
-                        ['PORCENTAJE DE CARTERA EN RIESGO'].concat(fechas.map(function(f) { return processingData[f].indicadores_inv_publica.PORCENTAJE_CARTERA_RIESGO; })),
-                        ['PORCENTA DE CARTERA QUE NO DEVENGA INTERES'].concat(fechas.map(function(f) { return processingData[f].indicadores_inv_publica.PORCENTAJE_CARTERA_NDI; })),
-                        ['PORCENTAJE DE CARTERA VENCIDA'].concat(fechas.map(function(f) { return processingData[f].indicadores_inv_publica.PORCENTAJE_CARTERA_VENCIDA; }))
+                        ['CARTERA INVERSIÓN PÚBLICA', ...fechas.map(f => processingData[f].indicadores_inv_publica.CARTERA_INVERSIÓN_PÚBLICA)],
+                        ['PORCENTAJE DE CARTERA POR VENCER', ...fechas.map(f => processingData[f].indicadores_inv_publica.PORCENTAJE_CARTERA_X_VENCER)],
+                        ['PORCENTAJE DE CARTERA EN RIESGO', ...fechas.map(f => processingData[f].indicadores_inv_publica.PORCENTAJE_CARTERA_RIESGO)],
+                        ['PORCENTA DE CARTERA QUE NO DEVENGA INTERES', ...fechas.map(f => processingData[f].indicadores_inv_publica.PORCENTAJE_CARTERA_NDI)],
+                        ['PORCENTAJE DE CARTERA VENCIDA', ...fechas.map(f => processingData[f].indicadores_inv_publica.PORCENTAJE_CARTERA_VENCIDA)]
                     ],
                     bgColor: 'F4ECF7'
                 },
                 {
                     titulo: 'PROVISIONES',
                     datos: [
-                        ['Productivo'].concat(fechas.map(function(f) { return processingData[f].provisiones.Productivo; })),
-                        ['Inversión Publica'].concat(fechas.map(function(f) { return processingData[f].provisiones.Inversión_Publica; })),
-                        ['Refinanciada'].concat(fechas.map(function(f) { return processingData[f].provisiones.Refinanciada; })),
-                        ['Reestructurada'].concat(fechas.map(function(f) { return processingData[f].provisiones.Reestructurada; })),
-                        ['Provisión Anticíclica'].concat(fechas.map(function(f) { return processingData[f].provisiones.Provisión_Anticíclica; })),
-                        ['Provisiones no reversadas por requerimiento normativo'].concat(fechas.map(function(f) { return processingData[f].provisiones.Provisiones_no_reversadas; })),
-                        ['Provisión genérica voluntaria'].concat(fechas.map(function(f) { return processingData[f].provisiones.Provisión_genérica_voluntaria; })),
-                        ['Provisiones para créditos incobrables'].concat(fechas.map(function(f) { return processingData[f].provisiones.Provisiones_para_créditos_incobrables; }))
+                        ['Productivo', ...fechas.map(f => processingData[f].provisiones.Productivo)],
+                        ['Inversión Publica', ...fechas.map(f => processingData[f].provisiones.Inversión_Publica)],
+                        ['Refinanciada', ...fechas.map(f => processingData[f].provisiones.Refinanciada)],
+                        ['Reestructurada', ...fechas.map(f => processingData[f].provisiones.Reestructurada)],
+                        ['Provisión Anticíclica', ...fechas.map(f => processingData[f].provisiones.Provisión_Anticíclica)],
+                        ['Provisiones no reversadas por requerimiento normativo', ...fechas.map(f => processingData[f].provisiones.Provisiones_no_reversadas)],
+                        ['Provisión genérica voluntaria', ...fechas.map(f => processingData[f].provisiones.Provisión_genérica_voluntaria)],
+                        ['Provisiones para créditos incobrables', ...fechas.map(f => processingData[f].provisiones.Provisiones_para_créditos_incobrables)]
                     ],
                     bgColor: 'F8F9FA'
                 }
             ];
 
             // Agregar cada sección
-            secciones.forEach(function(seccion, seccionIndex) {
+            secciones.forEach((seccion, seccionIndex) => {
                 // Agregar título de sección
                 const tituloRow = worksheet.getRow(currentRow);
                 tituloRow.getCell(1).value = seccion.titulo;
@@ -1245,7 +1226,7 @@
                 // Agregar encabezados
                 const headerRow = worksheet.getRow(currentRow);
                 headerRow.getCell(1).value = 'Concepto';
-                fechas.forEach(function(fecha, index) {
+                fechas.forEach((fecha, index) => {
                     headerRow.getCell(index + 2).value = fecha;
                 });
 
@@ -1271,7 +1252,7 @@
                 currentRow++;
 
                 // Agregar datos
-                seccion.datos.forEach(function(fila) {
+                seccion.datos.forEach(fila => {
                     const dataRow = worksheet.getRow(currentRow);
                     
                     // Agregar concepto
@@ -1285,7 +1266,7 @@
                     };
 
                     // Agregar valores numéricos
-                    fila.slice(1).forEach(function(valor, index) {
+                    fila.slice(1).forEach((valor, index) => {
                         const cell = dataRow.getCell(index + 2);
                         cell.value = parseFloat(valor);
                         cell.numFmt = '#,##0.00';
@@ -1319,22 +1300,11 @@
             const resumenSheet = workbook.addWorksheet('Resumen');
             resumenSheet.columns = [{ width: 50 }, { width: 30 }];
 
-            // Información del origen de datos
-            let origenTexto = '';
-            if (origenDatos === 'archivo_subido') {
-                origenTexto = 'Archivo subido por el usuario';
-            } else if (origenDatos === 'cache_local') {
-                origenTexto = 'Datos desde cache local';
-            } else {
-                origenTexto = 'Datos desde repositorio';
-            }
-
             const resumenData = [
                 ['REPORTE CONSOLIDADO TRIMESTRAL'],
                 ['Banco de Desarrollo del Ecuador'],
                 [''],
                 ['Fecha de generación:', new Date().toLocaleDateString('es-EC')],
-                ['Origen de los datos:', origenTexto],
                 ['Períodos analizados:', `${fechas[0]} a ${fechas[fechas.length - 1]}`],
                 ['Total de trimestres:', fechas.length],
                 [''],
@@ -1353,7 +1323,7 @@
                 ['• Los datos corresponden a fechas trimestrales efectivamente procesadas']
             ];
 
-            resumenData.forEach(function(fila, index) {
+            resumenData.forEach((fila, index) => {
                 const row = resumenSheet.getRow(index + 1);
                 if (Array.isArray(fila)) {
                     row.getCell(1).value = fila[0];
@@ -1385,13 +1355,12 @@
                 link.href = url;
                 
                 const timestamp = new Date().toISOString().slice(0, 10);
-                const origenSufijo = origenDatos === 'archivo_subido' ? '_Usuario' : '';
-                link.download = `Reporte_Consolidado_Trimestral_BDD_${timestamp}${origenSufijo}.xlsx`;
+                link.download = `Reporte_Consolidado_Trimestral_BDD_${timestamp}.xlsx`;
                 
                 link.click();
                 window.URL.revokeObjectURL(url);
                 
-                mostrarMensajeExito(`Archivo Excel exportado exitosamente (${origenTexto}): Reporte_Consolidado_Trimestral_BDD_${timestamp}${origenSufijo}.xlsx`);
+                mostrarMensajeExito(`Archivo Excel exportado exitosamente: Reporte_Consolidado_Trimestral_BDD_${timestamp}.xlsx`);
                 
             } catch (error) {
                 console.error('Error al exportar:', error);
@@ -1440,65 +1409,12 @@
             }, 8000);
         }
 
-        // Nueva función específica para procesar archivos subidos por el usuario
-        function procesarArchivoSubido(workbook, nombreArchivo) {
-            try {
-                console.log('Iniciando procesamiento de archivo subido:', nombreArchivo);
-                
-                // Buscar hoja principal
-                let mainSheetName = 'BAL';
-                if (!workbook.Sheets[mainSheetName]) {
-                    mainSheetName = workbook.SheetNames[0];
-                    console.log('Hoja "BAL" no encontrada, usando:', mainSheetName);
-                }
-                
-                const mainSheet = workbook.Sheets[mainSheetName];
-                const indicSheet = workbook.Sheets['INDIC CARTERA'];
-                
-                if (!mainSheet) {
-                    throw new Error(`La hoja principal "${mainSheetName}" no existe en el archivo`);
-                }
-                
-                if (!indicSheet) {
-                    throw new Error('La hoja "INDIC CARTERA" no existe en el archivo');
-                }
-
-                console.log('Extrayendo datos desde fila 5 con carga flexible...');
-
-                // Extraer datos DESDE EL ARCHIVO SUBIDO con carga flexible
-                const mainData = XLSX.utils.sheet_to_json(mainSheet, { 
-                    header: 1,
-                    range: 4,  // Desde fila 5 (índice 4)
-                    defval: ''
-                });
-                
-                const indicData = XLSX.utils.sheet_to_json(indicSheet, { 
-                    header: 1,
-                    range: 4,  // Desde fila 5 (índice 4) 
-                    defval: ''
-                });
-
-                console.log('Filas extraídas - Principal:', mainData.length, 'Indicadores:', indicData.length);
-
-                // Procesar datos del archivo subido
-                const resultados = procesarDatos(mainData, indicData);
-                
-                console.log('Procesamiento completado. Fechas encontradas:', Object.keys(resultados).length);
-                
-                return resultados;
-                
-            } catch (error) {
-                console.error('Error en procesarArchivoSubido:', error);
-                throw new Error(`Error procesando ${nombreArchivo}: ${error.message}`);
-            }
-        }
-
         // Event Listeners
         document.getElementById('fileInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
                 document.getElementById('processBtn').disabled = false;
-                document.querySelector('.file-input-label').textContent = `📁 ${file.name}`;
+                document.querySelector('.file-input-label').textContent = `${file.name}`;
             }
         });
 
@@ -1515,12 +1431,8 @@
 
         document.getElementById('processBtn').addEventListener('click', function() {
             const file = document.getElementById('fileInput').files[0];
-            if (!file) {
-                mostrarError('Por favor selecciona un archivo Excel primero.');
-                return;
-            }
+            if (!file) return;
 
-            // Mostrar loading
             document.getElementById('loading').style.display = 'block';
             document.getElementById('results').style.display = 'none';
             document.getElementById('exportSection').style.display = 'none';
@@ -1529,64 +1441,45 @@
             const loadingDiv = document.getElementById('loading');
             loadingDiv.innerHTML = `
                 <div class="spinner"></div>
-                <p><strong>🔄 Procesando tu archivo...</strong></p>
-                <p>📂 Analizando: ${file.name}</p>
-                <p>⚡ Aplicando carga flexible de datos...</p>
+                <p><strong>Procesando archivo subido...</strong></p>
+                <p>Analizando: ${file.name}</p>
             `;
 
-            // Crear FileReader para leer el archivo subido
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
-                    console.log('🔍 Procesando archivo subido:', file.name);
+                    // Leer el workbook desde los datos del archivo subido
+                    const workbook = XLSX.read(e.target.result, { type: 'binary' });
                     
-                    // Leer el workbook DESDE EL ARCHIVO SUBIDO
-                    const arrayBuffer = e.target.result;
-                    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                    // Procesar como archivo subido (no del repositorio)
+                    const resultados = procesarWorkbook(workbook, true, file.name);
                     
-                    console.log('📊 Hojas disponibles:', workbook.SheetNames);
-                    
-                    // Procesar DIRECTAMENTE desde el archivo subido
-                    const resultados = procesarArchivoSubido(workbook, file.name);
-                    
-                    if (resultados && Object.keys(resultados).length > 0) {
-                        // Actualizar datos globales CON LOS DATOS DEL ARCHIVO SUBIDO
+                    if (resultados) {
+                        // Actualizar datos globales
                         processingData = resultados;
                         const fechaActual = new Date();
                         fechaUltimaActualizacion = fechaActual;
                         
-                        // Mostrar resultados del archivo REALMENTE subido
+                        // Mostrar resultados del archivo subido
                         mostrarResultados(resultados);
                         
                         // Actualizar información del archivo procesado
                         mostrarInfoArchivoSubido(file.name, fechaActual);
-                        mostrarMensajeExito(`✅ Tu archivo procesado exitosamente: ${file.name}`);
+                        mostrarMensajeExito(`Archivo procesado exitosamente: ${file.name}`);
                         
-                        // Limpiar cache del repositorio
+                        // Limpiar datos locales ya que se subió un archivo nuevo
                         localStorage.removeItem('bdd_datos_procesados');
                         localStorage.removeItem('bdd_fecha_actualizacion');
                         
-                        origenDatos = 'archivo_subido';
-                        
-                        console.log('✅ Archivo subido procesado correctamente con', Object.keys(resultados).length, 'fechas');
-                        console.log('📅 Fechas procesadas:', Object.keys(resultados));
+                        console.log('Archivo subido procesado correctamente:', file.name);
                     } else {
-                        throw new Error('No se pudieron extraer datos del archivo subido');
+                        throw new Error('Error al procesar los datos del archivo subido');
                     }
-                    
                 } catch (error) {
-                    console.error('❌ Error procesando archivo subido:', error);
-                    mostrarError('Error al procesar tu archivo: ' + error.message + '. Verifica que el archivo tenga las hojas "BAL" e "INDIC CARTERA".');
+                    mostrarError('Error al procesar el archivo subido: ' + error.message);
                 }
             };
-            
-            reader.onerror = function(error) {
-                console.error('❌ Error leyendo archivo:', error);
-                mostrarError('Error al leer el archivo. Intenta de nuevo.');
-            };
-            
-            // Leer como ArrayBuffer para mayor compatibilidad
-            reader.readAsArrayBuffer(file);
+            reader.readAsBinaryString(file);
         });
 
         document.getElementById('exportBtn').addEventListener('click', exportarExcel);
